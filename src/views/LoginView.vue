@@ -129,11 +129,7 @@ function handleSubmit() {
         {{ isRegisterMode ? 'Já tenho conta' : 'Criar uma conta' }}
       </button>
 
-      <div class="auth-demo">
-        <strong>Login de teste:</strong>
-        <span>maria@disciplina.com</span>
-        <span>Senha: 123456</span>
-      </div>
+      
     </section>
   </main>
 </template>
