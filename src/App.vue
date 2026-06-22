@@ -1,85 +1,101 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+import { computed } from 'vue'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from './stores/authStore'
+
+const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
+
+const isAuthPage = computed(() => route.name === 'login')
+
+const navItems = [
+  {
+    label: 'Dashboard',
+    to: '/',
+    icon: '🏠',
+  },
+  {
+    label: 'Registro diário',
+    to: '/registro-diario',
+    icon: '✅',
+  },
+  {
+    label: 'Relatórios',
+    to: '/relatorios',
+    icon: '📊',
+  },
+  {
+    label: 'Exceções',
+    to: '/excecoes',
+    icon: '📌',
+  },
+  {
+    label: 'Evidências',
+    to: '/evidencias',
+    icon: '📷',
+  },
+  {
+    label: 'Rotina',
+    to: '/rotina',
+    icon: '🗓️',
+  },
+]
+
+function handleLogout() {
+  authStore.logout()
+  router.push('/login')
+}
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+  <RouterView v-if="isAuthPage" />
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+  <div v-else class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">D</div>
 
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
+        <div>
+          <h1>Disciplina 24/7</h1>
+          <p>Plano de constância pessoal</p>
+        </div>
+      </div>
+
+      <nav class="nav-menu" aria-label="Menu principal">
+        <RouterLink v-for="item in navItems" :key="item.to" :to="item.to" class="nav-link">
+          <span>{{ item.icon }}</span>
+          {{ item.label }}
+        </RouterLink>
       </nav>
-    </div>
-  </header>
 
-  <RouterView />
+      <div class="sidebar-card">
+        <span class="sidebar-card-label">Meta semanal</span>
+        <strong>70%</strong>
+        <p>O foco é constância, não perfeição.</p>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <span class="eyebrow">Sistema de comprovação</span>
+          <h2>Plano de Disciplina Pessoal</h2>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="user-badge">
+            <span></span>
+            {{ authStore.currentUser?.name || 'Usuária' }}
+          </div>
+
+          <button class="logout-btn" type="button" @click="handleLogout">
+            Sair
+          </button>
+        </div>
+      </header>
+
+      <RouterView />
+    </main>
+  </div>
 </template>
-
-<style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
-}
-</style>
