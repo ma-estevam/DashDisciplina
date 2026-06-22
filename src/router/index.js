@@ -6,7 +6,7 @@ import ReportsView from '../views/ReportsView.vue'
 import ExceptionsView from '../views/ExceptionsView.vue'
 import EvidenceView from '../views/EvidenceView.vue'
 import LoginView from '../views/LoginView.vue'
-import RoutineView from '../views/RoutineView.vue'
+import RoutineSettingsView from '../views/RoutineSettingsView.vue'
 
 const SESSION_KEY = 'disciplina_247_current_user'
 
@@ -32,7 +32,7 @@ const router = createRouter({
     {
       path: '/rotina',
       name: 'routine',
-      component: RoutineView,
+      component: RoutineSettingsView,
       meta: {
         requiresAuth: true,
       },

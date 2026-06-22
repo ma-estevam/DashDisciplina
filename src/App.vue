@@ -36,7 +36,7 @@ const navItems = [
     icon: '📷',
   },
   {
-    label: 'Rotina',
+    label: 'Configurar rotina',
     to: '/rotina',
     icon: '🗓️',
   },
