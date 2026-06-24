@@ -12,6 +12,9 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
+    async initialize() {
+      await this.restoreSession()
+    },
     async restoreSession() {
       const { data, error } = await supabase.auth.getSession()
 
@@ -39,9 +42,9 @@ export const useAuthStore = defineStore('auth', {
           data: {
             name: name.trim(),
           },
+          emailRedirectTo: `${window.location.origin}/login`,
         },
       })
-
       this.loading = false
 
       if (error) {

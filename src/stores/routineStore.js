@@ -200,15 +200,35 @@ export const useRoutineStore = defineStore('routine', {
   }),
 
   getters: {
-    activeRoutine(state) {
-      return (
-        state.routines.find((routine) => routine.id === state.activeRoutineId) ||
-        state.routines[0]
-      )
-    },
+  activeRoutine(state) {
+    return (
+      state.routines.find((routine) => routine.id === state.activeRoutineId) ||
+      state.routines[0] ||
+      null
+    )
   },
 
+  activeRoutineName() {
+    return this.activeRoutine?.name || 'Nenhuma rotina'
+  },
+
+  activeRoutineType() {
+    return this.activeRoutine?.type || 'Personalizada'
+  },
+
+  activeActivities() {
+    return this.activeRoutine?.activities || []
+  },
+
+  activeHabits() {
+    return this.activeRoutine?.habits || []
+  },
+},
+
   actions: {
+    async initialize() {
+      await this.loadRoutines()
+    },
     loadRoutines() {
       const savedRoutines = loadUserData(ROUTINES_KEY, null)
       const savedActiveRoutine = loadUserData(ACTIVE_ROUTINE_KEY, null)

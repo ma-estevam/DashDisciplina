@@ -6,7 +6,7 @@ import { useRoutineStore } from '../stores/routineStore'
 
 const routineStore = useRoutineStore()
 const disciplineStore = useDisciplineStore()
-routineStore.initialize()
+routineStore.loadRoutines()
 disciplineStore.initialize()
 
 const activeRoutine = computed(() => routineStore.activeRoutine)
