@@ -1,12 +1,15 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { localDateKey, useDisciplineStore } from '../stores/disciplineStore'
+import { useExceptionStore } from '../stores/exceptionStore'
 import { useRoutineStore } from '../stores/routineStore'
 
 const routineStore = useRoutineStore()
 const disciplineStore = useDisciplineStore()
+const exceptionStore = useExceptionStore()
 routineStore.initialize()
 disciplineStore.initialize()
+exceptionStore.initialize()
 
 const selectedDate = ref(localDateKey())
 const entries = ref([])
@@ -14,22 +17,53 @@ const dayNote = ref('')
 const message = ref('')
 const messageType = ref('success')
 const uploadingHabitId = ref(null)
+const isExceptionDay = ref(false)
+const selectedExceptionId = ref('')
+const exceptionReason = ref('')
+const exceptionNote = ref('')
+const minimumHabitsGoal = ref(1)
+const minimumHabitsCompleted = ref('')
+const minimumRoutineCompleted = ref(false)
 
 const activeRoutine = computed(() => routineStore.activeRoutine)
 const completedCount = computed(() => entries.value.filter((entry) => entry.completed).length)
-const progress = computed(() =>
-  entries.value.length ? Math.round((completedCount.value / entries.value.length) * 100) : 0,
+const selectedException = computed(
+  () => exceptionStore.exceptions.find((item) => item.id === selectedExceptionId.value) || null,
 )
+const dateException = computed(() => exceptionStore.getExceptionByDate(selectedDate.value))
+const effectiveGoal = computed(() =>
+  isExceptionDay.value ? Number(minimumHabitsGoal.value) || completedCount.value || 1 : entries.value.length,
+)
+const progress = computed(() =>
+  effectiveGoal.value ? Math.min(100, Math.round((completedCount.value / effectiveGoal.value) * 100)) : 0,
+)
+
+function applyException(exception = null) {
+  isExceptionDay.value = Boolean(exception)
+  selectedExceptionId.value = exception?.id || ''
+  exceptionReason.value = exception?.title || ''
+  exceptionNote.value = exception?.description || ''
+  minimumHabitsGoal.value = exception?.minimumHabits || Math.max(1, Math.min(2, entries.value.length || 1))
+  minimumHabitsCompleted.value = ''
+  minimumRoutineCompleted.value = false
+}
 
 function loadDate() {
   const existing = disciplineStore.recordByDate(selectedDate.value)
 
   if (existing) {
-    entries.value = existing.entries.map((entry) => ({
+    entries.value = (existing.entries || []).map((entry) => ({
       ...entry,
       evidenceIds: [...(entry.evidenceIds || [])],
     }))
     dayNote.value = existing.note || ''
+    isExceptionDay.value = Boolean(existing.isExceptionDay)
+    selectedExceptionId.value = existing.exceptionId || ''
+    exceptionReason.value = existing.exceptionReason || existing.exceptionTitle || ''
+    exceptionNote.value = existing.exceptionNote || ''
+    minimumHabitsGoal.value = existing.minimumHabitsGoal || existing.plannedHabitCount || entries.value.length || 1
+    minimumHabitsCompleted.value = existing.minimumHabitsCompleted || existing.habitsCompleted || ''
+    minimumRoutineCompleted.value = Boolean(existing.minimumRoutineCompleted)
     return
   }
 
@@ -46,9 +80,23 @@ function loadDate() {
     evidenceIds: [],
   }))
   dayNote.value = ''
+  applyException(dateException.value)
 }
 
 watch(selectedDate, loadDate, { immediate: true })
+watch(
+  () => exceptionStore.exceptions,
+  () => {
+    if (!disciplineStore.recordByDate(selectedDate.value)) applyException(dateException.value)
+  },
+  { deep: true },
+)
+watch(selectedException, (exception) => {
+  if (!exception || !isExceptionDay.value) return
+  exceptionReason.value = exception.title || exceptionReason.value
+  exceptionNote.value = exception.description || exceptionNote.value
+  minimumHabitsGoal.value = exception.minimumHabits || minimumHabitsGoal.value
+})
 watch(
   () => routineStore.activeRoutineId,
   () => {
@@ -132,16 +180,29 @@ function saveRecord() {
   )
 
   if (missingEvidence) {
-    notify(`Adicione uma evidência para concluir “${missingEvidence.habitName}”.`, 'error')
+    notify(`Adicione uma evidência para concluir "${missingEvidence.habitName}".`, 'error')
     return
   }
 
   try {
+    const exception = selectedException.value || dateException.value
+
     disciplineStore.saveRecord({
       date: selectedDate.value,
       routine: activeRoutine.value,
       entries: entries.value,
       note: dayNote.value,
+      exceptionData: {
+        isExceptionDay: isExceptionDay.value,
+        exceptionId: selectedExceptionId.value || exception?.id || null,
+        exceptionTitle: exception?.title || exceptionReason.value,
+        exceptionType: exception?.type || '',
+        exceptionReason: exceptionReason.value,
+        exceptionNote: exceptionNote.value,
+        minimumHabitsGoal: minimumHabitsGoal.value,
+        minimumHabitsCompleted: minimumHabitsCompleted.value || completedCount.value,
+        minimumRoutineCompleted: minimumRoutineCompleted.value || completedCount.value >= effectiveGoal.value,
+      },
     })
     notify('Registro diário salvo com sucesso.')
   } catch {
@@ -178,13 +239,65 @@ function saveRecord() {
       <div class="register-summary panel">
         <div>
           <span>Progresso do dia</span>
-          <strong>{{ completedCount }}/{{ entries.length }}</strong>
+          <strong>{{ completedCount }}/{{ effectiveGoal }}</strong>
+          <small v-if="isExceptionDay">Meta reduzida por exceção</small>
         </div>
         <div class="progress-bar progress-bar-light">
           <div :style="{ width: `${progress}%` }"></div>
         </div>
         <strong>{{ progress }}%</strong>
       </div>
+
+      <article class="panel exception-day-panel">
+        <div class="exception-toggle-row">
+          <label class="inline-check">
+            <input v-model="isExceptionDay" type="checkbox" />
+            Este foi um dia de exceção
+          </label>
+          <RouterLink class="text-link" to="/excecoes">gerenciar exceções</RouterLink>
+        </div>
+
+        <div v-if="isExceptionDay" class="exception-daily-grid">
+          <div class="form-group">
+            <label for="daily-exception">Exceção cadastrada</label>
+            <select id="daily-exception" v-model="selectedExceptionId">
+              <option value="">Exceção manual</option>
+              <option v-for="item in exceptionStore.sortedExceptions" :key="item.id" :value="item.id">
+                {{ item.date }} - {{ item.title }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="minimum-goal">Meta mínima de hábitos</label>
+            <input id="minimum-goal" v-model.number="minimumHabitsGoal" min="1" type="number" />
+          </div>
+
+          <div class="form-group">
+            <label for="minimum-completed">Hábitos mínimos cumpridos</label>
+            <input id="minimum-completed" v-model.number="minimumHabitsCompleted" min="0" type="number" />
+          </div>
+
+          <div class="form-group">
+            <label for="exception-reason">Motivo</label>
+            <input id="exception-reason" v-model="exceptionReason" maxlength="160" />
+          </div>
+        </div>
+
+        <div v-if="isExceptionDay" class="form-group">
+          <label for="exception-note">Observação da exceção</label>
+          <textarea
+            id="exception-note"
+            v-model="exceptionNote"
+            placeholder="Explique o contexto do dia e qual versão mínima da rotina foi cumprida."
+          ></textarea>
+        </div>
+
+        <label v-if="isExceptionDay" class="inline-check">
+          <input v-model="minimumRoutineCompleted" type="checkbox" />
+          Rotina mínima cumprida
+        </label>
+      </article>
 
       <div v-if="entries.length" class="register-cards">
         <article

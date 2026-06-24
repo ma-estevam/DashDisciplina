@@ -89,14 +89,33 @@ export const useDisciplineStore = defineStore('discipline', {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storage))
     },
 
-    saveRecord({ date, routine, entries, note }) {
+    saveRecord({ date, routine, entries, note, exceptionData = null }) {
+      const completedEntries = entries.filter((entry) => entry.completed).length
+      const isExceptionDay = Boolean(exceptionData?.isExceptionDay)
+      const minimumHabitsGoal = Number(exceptionData?.minimumHabitsGoal) || completedEntries || 1
+      const plannedHabitCount = isExceptionDay ? minimumHabitsGoal : entries.length
+
       const snapshot = {
         date,
         routineId: routine?.id || null,
         routineName: routine?.name || 'Rotina sem nome',
-        plannedHabitCount: entries.length,
+        plannedHabitCount,
+        habitsCompleted: completedEntries,
         entries: entries.map((entry) => ({ ...entry })),
         note: note?.trim() || '',
+        isExceptionDay,
+        exceptionId: exceptionData?.exceptionId || null,
+        exceptionTitle: exceptionData?.exceptionTitle || '',
+        exceptionType: exceptionData?.exceptionType || '',
+        exceptionReason: exceptionData?.exceptionReason?.trim() || '',
+        exceptionNote: exceptionData?.exceptionNote?.trim() || '',
+        minimumHabitsGoal: isExceptionDay ? minimumHabitsGoal : null,
+        minimumHabitsCompleted: isExceptionDay
+          ? Number(exceptionData?.minimumHabitsCompleted) || completedEntries
+          : null,
+        minimumRoutineCompleted: isExceptionDay
+          ? Boolean(exceptionData?.minimumRoutineCompleted || completedEntries >= minimumHabitsGoal)
+          : false,
         updatedAt: new Date().toISOString(),
       }
       const existing = this.records.find((record) => record.date === date)

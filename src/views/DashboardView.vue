@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   GraduationCap,
   ListChecks,
+  Pin,
 } from 'lucide-vue-next'
 import StatCard from '../components/StatCard.vue'
 import { useBodyProgressStore } from '../stores/bodyProgressStore'
@@ -15,6 +16,7 @@ import { useBooksStore } from '../stores/booksStore'
 import { useCoursesStore } from '../stores/coursesStore'
 import { useCustomModulesStore } from '../stores/customModulesStore'
 import { localDateKey, useDisciplineStore } from '../stores/disciplineStore'
+import { useExceptionStore } from '../stores/exceptionStore'
 import { useRoutineStore } from '../stores/routineStore'
 
 const routineStore = useRoutineStore()
@@ -23,20 +25,23 @@ const bodyStore = useBodyProgressStore()
 const booksStore = useBooksStore()
 const coursesStore = useCoursesStore()
 const customStore = useCustomModulesStore()
+const exceptionStore = useExceptionStore()
 routineStore.initialize()
 disciplineStore.initialize()
 bodyStore.initialize()
 booksStore.initialize()
 coursesStore.initialize()
 customStore.initialize()
+exceptionStore.initialize()
 
 const activeRoutine = computed(() => routineStore.activeRoutine)
 const todayRecord = computed(() => disciplineStore.recordByDate(localDateKey()))
+const todayException = computed(() => exceptionStore.getExceptionByDate(localDateKey()))
 const completedCount = computed(
   () => todayRecord.value?.entries.filter((entry) => entry.completed).length || 0,
 )
 const totalHabits = computed(
-  () => todayRecord.value?.plannedHabitCount ?? activeRoutine.value?.habits.length ?? 0,
+  () => todayRecord.value?.plannedHabitCount ?? todayException.value?.minimumHabits ?? activeRoutine.value?.habits.length ?? 0,
 )
 const progress = computed(() =>
   totalHabits.value ? Math.round((completedCount.value / totalHabits.value) * 100) : 0,
@@ -111,6 +116,18 @@ function formatDate(date) {
         :icon="CalendarClock"
       />
     </div>
+
+    <RouterLink v-if="todayException" to="/registro-diario" class="exception-alert panel">
+      <Pin class="module-icon" aria-hidden="true" />
+      <div>
+        <span class="eyebrow">Exceção hoje</span>
+        <h3>{{ todayException.title || 'Rotina reduzida' }}</h3>
+        <p>
+          Meta mínima de {{ todayException.minimumHabits || 1 }} hábitos.
+          {{ todayException.description || 'Registre o dia usando a versão reduzida da rotina.' }}
+        </p>
+      </div>
+    </RouterLink>
 
     <section class="dashboard-modules-grid">
       <RouterLink to="/evolucao-fisica" class="module-summary-card">

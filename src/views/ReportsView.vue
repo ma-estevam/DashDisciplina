@@ -2,14 +2,17 @@
 import { computed } from 'vue'
 import { useCustomModulesStore } from '../stores/customModulesStore'
 import { localDateKey, useDisciplineStore } from '../stores/disciplineStore'
+import { useExceptionStore } from '../stores/exceptionStore'
 import { useRoutineStore } from '../stores/routineStore'
 
 const routineStore = useRoutineStore()
 const disciplineStore = useDisciplineStore()
 const customStore = useCustomModulesStore()
+const exceptionStore = useExceptionStore()
 routineStore.initialize()
 disciplineStore.initialize()
 customStore.initialize()
+exceptionStore.initialize()
 
 const weekDays = computed(() => {
   const today = new Date()
@@ -28,7 +31,8 @@ const weeklyRows = computed(() =>
   weekDays.value.map((date) => {
     const dateKey = localDateKey(date)
     const record = disciplineStore.recordByDate(dateKey)
-    const planned = record?.plannedHabitCount ?? routineStore.activeRoutine?.habits.length ?? 0
+    const exception = exceptionStore.getExceptionByDate(dateKey)
+    const planned = record?.plannedHabitCount ?? exception?.minimumHabits ?? routineStore.activeRoutine?.habits.length ?? 0
     const completed = record?.entries.filter((entry) => entry.completed).length || 0
 
     return {
@@ -36,6 +40,8 @@ const weeklyRows = computed(() =>
       label: date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }),
       planned,
       completed,
+      exceptionTitle: record?.exceptionTitle || exception?.title || '',
+      isExceptionDay: Boolean(record?.isExceptionDay || exception),
       percentage: planned ? Math.round((completed / planned) * 100) : 0,
     }
   }),
@@ -102,8 +108,11 @@ function formatDate(date) {
       </div>
 
       <div class="weekly-list">
-        <div v-for="day in weeklyRows" :key="day.date" class="weekly-row">
-          <strong>{{ day.label }}</strong>
+        <div v-for="day in weeklyRows" :key="day.date" :class="['weekly-row', { 'weekly-row-exception': day.isExceptionDay }]">
+          <strong>
+            {{ day.label }}
+            <small v-if="day.isExceptionDay">{{ day.exceptionTitle || 'Exceção' }}</small>
+          </strong>
           <div class="weekly-progress">
             <div :style="{ width: `${day.percentage}%` }"></div>
           </div>

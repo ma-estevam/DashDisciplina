@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import {
   Activity,
@@ -23,6 +23,10 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const isAuthPage = computed(() => route.name === 'login')
+
+onMounted(() => {
+  authStore.initialize()
+})
 
 const navItems = [
   {
@@ -85,6 +89,13 @@ async function handleLogout() {
 
 <template>
   <RouterView v-if="isAuthPage" />
+
+  <div v-else-if="authStore.authLoading" class="app-loading">
+    <div>
+      <span class="brand-mark">H</span>
+      <strong>Carregando HubDisciplina...</strong>
+    </div>
+  </div>
 
   <div v-else class="app-shell">
     <AppSidebar :nav-items="navItems" />
