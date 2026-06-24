@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { Activity, BookOpen, CalendarClock, CheckCircle2, GraduationCap, ListChecks } from 'lucide-vue-next'
 import StatCard from '../components/StatCard.vue'
 import { useBodyProgressStore } from '../stores/bodyProgressStore'
 import { useBooksStore } from '../stores/booksStore'
@@ -75,31 +76,57 @@ function formatDate(date) {
     </div>
 
     <div class="stats-grid">
-      <StatCard title="Progresso hoje" :value="`${progress}%`" subtitle="dos hábitos planejados" type="primary" />
-      <StatCard title="Hábitos ativos" :value="String(activeRoutine?.habits.length || 0)" subtitle="na rotina atual" />
-      <StatCard title="Atividades" :value="String(activeRoutine?.activities.length || 0)" subtitle="horários cadastrados" />
+      <StatCard
+        title="Progresso hoje"
+        :value="`${progress}%`"
+        subtitle="dos hábitos planejados"
+        type="primary"
+        :icon="CheckCircle2"
+      />
+      <StatCard
+        title="Hábitos ativos"
+        :value="String(activeRoutine?.habits.length || 0)"
+        subtitle="na rotina atual"
+        :icon="ListChecks"
+      />
+      <StatCard
+        title="Atividades"
+        :value="String(activeRoutine?.activities.length || 0)"
+        subtitle="horários cadastrados"
+        :icon="CalendarClock"
+      />
       <StatCard
         title="Primeiro compromisso"
-        :value="firstActivity?.startTime || '—'"
+        :value="firstActivity?.startTime || '-'"
         :subtitle="firstActivity?.title || 'agenda vazia'"
+        :icon="CalendarClock"
       />
     </div>
 
     <section class="dashboard-modules-grid">
       <RouterLink to="/evolucao-fisica" class="module-summary-card">
-        <span class="eyebrow">Evolução física</span>
+        <div class="module-summary-header">
+          <span class="eyebrow">Evolução física</span>
+          <Activity class="module-icon" aria-hidden="true" />
+        </div>
         <strong>{{ bodyStore.currentWeight || 0 }} kg</strong>
         <p>{{ bodyStore.currentGoal }} · {{ formatDate(bodyStore.latestRecord?.recordDate) }}</p>
       </RouterLink>
 
       <RouterLink to="/livros" class="module-summary-card">
-        <span class="eyebrow">Livro em andamento</span>
+        <div class="module-summary-header">
+          <span class="eyebrow">Livro em andamento</span>
+          <BookOpen class="module-icon" aria-hidden="true" />
+        </div>
         <strong>{{ currentBook?.title || 'Nenhum livro' }}</strong>
         <p>{{ booksStore.generalProgress }}% de progresso geral · {{ booksStore.pagesRead }} páginas</p>
       </RouterLink>
 
       <RouterLink to="/cursos" class="module-summary-card">
-        <span class="eyebrow">Curso em andamento</span>
+        <div class="module-summary-header">
+          <span class="eyebrow">Curso em andamento</span>
+          <GraduationCap class="module-icon" aria-hidden="true" />
+        </div>
         <strong>{{ currentCourse?.name || 'Nenhum curso' }}</strong>
         <p>{{ coursesStore.generalProgress }}% de progresso geral · {{ coursesStore.studiedHours }}h estudadas</p>
       </RouterLink>

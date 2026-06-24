@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { Camera } from 'lucide-vue-next'
 import { localDateKey, useDisciplineStore } from '../stores/disciplineStore'
 import { useRoutineStore } from '../stores/routineStore'
 
@@ -151,7 +152,7 @@ function formatDate(date) {
 
           <label class="upload-box" for="photo">
             <input id="photo" type="file" accept="image/*" multiple @change="handleFiles" />
-            <span>📷</span>
+            <Camera class="upload-icon" aria-hidden="true" />
             <strong>Selecionar fotos</strong>
             <small>Você pode enviar uma ou mais imagens</small>
           </label>

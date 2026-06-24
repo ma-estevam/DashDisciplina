@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { Plus } from 'lucide-vue-next'
 import BodyProgressCard from '../components/BodyProgressCard.vue'
 import BodyProgressForm from '../components/BodyProgressForm.vue'
 import StatCard from '../components/StatCard.vue'
@@ -63,7 +64,10 @@ function formatDate(date) {
         <h2>Acompanhe massa corporal e medidas.</h2>
         <p>Registre peso, altura, objetivo, medidas e fotos para acompanhar sua evolução pessoal.</p>
       </div>
-      <button class="btn-primary" type="button" @click="openNewRecord">Novo registro</button>
+      <button class="btn-primary" type="button" @click="openNewRecord">
+        <Plus class="button-icon" aria-hidden="true" />
+        Novo registro
+      </button>
     </div>
 
     <p v-if="message" :class="['feedback-message', `feedback-${messageType}`]">{{ message }}</p>
@@ -100,7 +104,10 @@ function formatDate(date) {
     <div v-else class="panel empty-state">
       <h3>Sem registros físicos ainda</h3>
       <p>Adicione o primeiro registro para visualizar seu histórico de evolução.</p>
-      <button class="btn-primary empty-action" type="button" @click="openNewRecord">Adicionar primeiro registro</button>
+      <button class="btn-primary empty-action" type="button" @click="openNewRecord">
+        <Plus class="button-icon" aria-hidden="true" />
+        Adicionar primeiro registro
+      </button>
     </div>
   </section>
 </template>

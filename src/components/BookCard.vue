@@ -1,4 +1,6 @@
 <script setup>
+import { Pencil, Trash2 } from 'lucide-vue-next'
+
 const props = defineProps({
   book: {
     type: Object,
@@ -26,8 +28,14 @@ const progress = () => {
       <small>{{ book.currentPage || 0 }}/{{ book.totalPages || 0 }} páginas · {{ progress() }}%</small>
       <p v-if="book.notes" class="tracker-note">{{ book.notes }}</p>
       <div class="item-actions">
-        <button type="button" @click="$emit('edit', book)">Editar</button>
-        <button class="danger-link" type="button" @click="$emit('delete', book)">Excluir</button>
+        <button type="button" @click="$emit('edit', book)">
+          <Pencil class="button-icon" aria-hidden="true" />
+          Editar
+        </button>
+        <button class="danger-link" type="button" @click="$emit('delete', book)">
+          <Trash2 class="button-icon" aria-hidden="true" />
+          Excluir
+        </button>
       </div>
     </div>
   </article>

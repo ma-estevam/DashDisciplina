@@ -1,4 +1,6 @@
 <script setup>
+import { Pencil, Trash2 } from 'lucide-vue-next'
+
 const props = defineProps({
   course: {
     type: Object,
@@ -27,8 +29,14 @@ const progress = () => {
       <a v-if="course.courseUrl" class="text-link" :href="course.courseUrl" target="_blank" rel="noreferrer">abrir curso</a>
       <p v-if="course.notes" class="tracker-note">{{ course.notes }}</p>
       <div class="item-actions">
-        <button type="button" @click="$emit('edit', course)">Editar</button>
-        <button class="danger-link" type="button" @click="$emit('delete', course)">Excluir</button>
+        <button type="button" @click="$emit('edit', course)">
+          <Pencil class="button-icon" aria-hidden="true" />
+          Editar
+        </button>
+        <button class="danger-link" type="button" @click="$emit('delete', course)">
+          <Trash2 class="button-icon" aria-hidden="true" />
+          Excluir
+        </button>
       </div>
     </div>
   </article>

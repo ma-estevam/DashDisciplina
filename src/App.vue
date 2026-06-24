@@ -1,6 +1,20 @@
 <script setup>
 import { computed } from 'vue'
-import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { RouterView, useRoute, useRouter } from 'vue-router'
+import {
+  Activity,
+  BarChart3,
+  BookOpen,
+  CalendarDays,
+  Camera,
+  CheckCircle2,
+  GraduationCap,
+  LayoutDashboard,
+  Pin,
+} from 'lucide-vue-next'
+import AppSidebar from './components/AppSidebar.vue'
+import AppTopbar from './components/AppTopbar.vue'
+import MobileNavigation from './components/MobileNavigation.vue'
 import { useAuthStore } from './stores/authStore'
 
 const route = useRoute()
@@ -13,52 +27,52 @@ const navItems = [
   {
     label: 'Dashboard',
     to: '/',
-    icon: '🏠',
+    icon: LayoutDashboard,
   },
   {
     label: 'Registro diário',
     to: '/registro-diario',
-    icon: '✅',
+    icon: CheckCircle2,
   },
   {
     label: 'Relatórios',
     to: '/relatorios',
-    icon: '📊',
+    icon: BarChart3,
   },
   {
     label: 'Exceções',
     to: '/excecoes',
-    icon: '📌',
+    icon: Pin,
   },
   {
     label: 'Evidências',
     to: '/evidencias',
-    icon: '📷',
+    icon: Camera,
   },
   {
     label: 'Evolução Física',
     to: '/evolucao-fisica',
-    icon: 'KG',
+    icon: Activity,
   },
   {
     label: 'Livros',
     to: '/livros',
-    icon: 'L',
+    icon: BookOpen,
   },
   {
     label: 'Cursos',
     to: '/cursos',
-    icon: 'C',
+    icon: GraduationCap,
   },
   {
-    label: 'Configurar rotina',
+    label: 'Rotina',
     to: '/rotina',
-    icon: '🗓️',
+    icon: CalendarDays,
   },
 ]
 
-function handleLogout() {
-  authStore.logout()
+async function handleLogout() {
+  await authStore.logout()
   router.push('/login')
 }
 </script>
@@ -67,50 +81,13 @@ function handleLogout() {
   <RouterView v-if="isAuthPage" />
 
   <div v-else class="app-shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-mark">D</div>
-
-        <div>
-          <h1>Disciplina 24/7</h1>
-          <p>Plano de constância pessoal</p>
-        </div>
-      </div>
-
-      <nav class="nav-menu" aria-label="Menu principal">
-        <RouterLink v-for="item in navItems" :key="item.to" :to="item.to" class="nav-link">
-          <span>{{ item.icon }}</span>
-          {{ item.label }}
-        </RouterLink>
-      </nav>
-
-      <div class="sidebar-card">
-        <span class="sidebar-card-label">Meta semanal</span>
-        <strong>70%</strong>
-        <p>O foco é constância, não perfeição.</p>
-      </div>
-    </aside>
+    <AppSidebar :nav-items="navItems" />
 
     <main class="main-content">
-      <header class="topbar">
-        <div>
-          <span class="eyebrow">Sistema de comprovação</span>
-          <h2>Plano de Disciplina Pessoal</h2>
-        </div>
-
-        <div class="topbar-actions">
-          <div class="user-badge">
-            <span></span>
-            {{ authStore.currentUser?.name || 'Usuária' }}
-          </div>
-
-          <button class="logout-btn" type="button" @click="handleLogout">
-            Sair
-          </button>
-        </div>
-      </header>
-
+      <AppTopbar :current-user="authStore.currentUser" @logout="handleLogout" />
       <RouterView />
     </main>
+
+    <MobileNavigation :nav-items="navItems" @logout="handleLogout" />
   </div>
 </template>

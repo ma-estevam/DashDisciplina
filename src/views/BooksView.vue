@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { Plus } from 'lucide-vue-next'
 import BookCard from '../components/BookCard.vue'
 import BookForm from '../components/BookForm.vue'
 import StatCard from '../components/StatCard.vue'
@@ -56,7 +57,10 @@ async function deleteBook(book) {
         <h2>Organize leituras e progresso.</h2>
         <p>Cadastre livros, atualize páginas lidas e acompanhe seu ritmo de leitura.</p>
       </div>
-      <button class="btn-primary" type="button" @click="openNewBook">Novo livro</button>
+      <button class="btn-primary" type="button" @click="openNewBook">
+        <Plus class="button-icon" aria-hidden="true" />
+        Novo livro
+      </button>
     </div>
 
     <p v-if="message" class="feedback-message">{{ message }}</p>
@@ -83,7 +87,10 @@ async function deleteBook(book) {
     <div v-else class="panel empty-state">
       <h3>Nenhum livro cadastrado</h3>
       <p>Adicione seu primeiro livro para começar a acompanhar a leitura.</p>
-      <button class="btn-primary empty-action" type="button" @click="openNewBook">Adicionar primeiro livro</button>
+      <button class="btn-primary empty-action" type="button" @click="openNewBook">
+        <Plus class="button-icon" aria-hidden="true" />
+        Adicionar primeiro livro
+      </button>
     </div>
   </section>
 </template>

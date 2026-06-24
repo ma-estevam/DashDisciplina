@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { Plus } from 'lucide-vue-next'
 import CourseCard from '../components/CourseCard.vue'
 import CourseForm from '../components/CourseForm.vue'
 import StatCard from '../components/StatCard.vue'
@@ -56,7 +57,10 @@ async function deleteCourse(course) {
         <h2>Acompanhe estudos e carga horária.</h2>
         <p>Cadastre cursos, registre horas concluídas e visualize o progresso dos seus estudos.</p>
       </div>
-      <button class="btn-primary" type="button" @click="openNewCourse">Novo curso</button>
+      <button class="btn-primary" type="button" @click="openNewCourse">
+        <Plus class="button-icon" aria-hidden="true" />
+        Novo curso
+      </button>
     </div>
 
     <p v-if="message" class="feedback-message">{{ message }}</p>
@@ -89,7 +93,10 @@ async function deleteCourse(course) {
     <div v-else class="panel empty-state">
       <h3>Nenhum curso cadastrado</h3>
       <p>Adicione seu primeiro curso para acompanhar progresso e carga horária.</p>
-      <button class="btn-primary empty-action" type="button" @click="openNewCourse">Adicionar primeiro curso</button>
+      <button class="btn-primary empty-action" type="button" @click="openNewCourse">
+        <Plus class="button-icon" aria-hidden="true" />
+        Adicionar primeiro curso
+      </button>
     </div>
   </section>
 </template>
