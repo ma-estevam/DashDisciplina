@@ -36,6 +36,21 @@ const navItems = [
     icon: '📷',
   },
   {
+    label: 'Evolução Física',
+    to: '/evolucao-fisica',
+    icon: 'KG',
+  },
+  {
+    label: 'Livros',
+    to: '/livros',
+    icon: 'L',
+  },
+  {
+    label: 'Cursos',
+    to: '/cursos',
+    icon: 'C',
+  },
+  {
     label: 'Configurar rotina',
     to: '/rotina',
     icon: '🗓️',

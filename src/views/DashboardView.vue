@@ -1,13 +1,22 @@
 <script setup>
 import { computed } from 'vue'
 import StatCard from '../components/StatCard.vue'
+import { useBodyProgressStore } from '../stores/bodyProgressStore'
+import { useBooksStore } from '../stores/booksStore'
+import { useCoursesStore } from '../stores/coursesStore'
 import { localDateKey, useDisciplineStore } from '../stores/disciplineStore'
 import { useRoutineStore } from '../stores/routineStore'
 
 const routineStore = useRoutineStore()
 const disciplineStore = useDisciplineStore()
+const bodyStore = useBodyProgressStore()
+const booksStore = useBooksStore()
+const coursesStore = useCoursesStore()
 routineStore.initialize()
 disciplineStore.initialize()
+bodyStore.initialize()
+booksStore.initialize()
+coursesStore.initialize()
 
 const activeRoutine = computed(() => routineStore.activeRoutine)
 const todayRecord = computed(() => disciplineStore.recordByDate(localDateKey()))
@@ -31,6 +40,13 @@ const habits = computed(() =>
   }),
 )
 const firstActivity = computed(() => activeRoutine.value?.activities[0] || null)
+const currentBook = computed(() => booksStore.currentBook)
+const currentCourse = computed(() => coursesStore.currentCourse)
+
+function formatDate(date) {
+  if (!date) return 'sem atualização'
+  return new Date(`${date}T00:00:00`).toLocaleDateString('pt-BR')
+}
 </script>
 
 <template>
@@ -68,6 +84,26 @@ const firstActivity = computed(() => activeRoutine.value?.activities[0] || null)
         :subtitle="firstActivity?.title || 'agenda vazia'"
       />
     </div>
+
+    <section class="dashboard-modules-grid">
+      <RouterLink to="/evolucao-fisica" class="module-summary-card">
+        <span class="eyebrow">Evolução física</span>
+        <strong>{{ bodyStore.currentWeight || 0 }} kg</strong>
+        <p>{{ bodyStore.currentGoal }} · {{ formatDate(bodyStore.latestRecord?.recordDate) }}</p>
+      </RouterLink>
+
+      <RouterLink to="/livros" class="module-summary-card">
+        <span class="eyebrow">Livro em andamento</span>
+        <strong>{{ currentBook?.title || 'Nenhum livro' }}</strong>
+        <p>{{ booksStore.generalProgress }}% de progresso geral · {{ booksStore.pagesRead }} páginas</p>
+      </RouterLink>
+
+      <RouterLink to="/cursos" class="module-summary-card">
+        <span class="eyebrow">Curso em andamento</span>
+        <strong>{{ currentCourse?.name || 'Nenhum curso' }}</strong>
+        <p>{{ coursesStore.generalProgress }}% de progresso geral · {{ coursesStore.studiedHours }}h estudadas</p>
+      </RouterLink>
+    </section>
 
     <section class="content-grid">
       <article class="panel">

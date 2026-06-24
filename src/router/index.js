@@ -8,6 +8,9 @@ import ExceptionsView from '../views/ExceptionsView.vue'
 import EvidenceView from '../views/EvidenceView.vue'
 import LoginView from '../views/LoginView.vue'
 import RoutineView from '../views/RoutineView.vue'
+import BodyProgressView from '../views/BodyProgressView.vue'
+import BooksView from '../views/BooksView.vue'
+import CoursesView from '../views/CoursesView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -52,6 +55,24 @@ const router = createRouter({
       path: '/evidencias',
       name: 'evidences',
       component: EvidenceView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/evolucao-fisica',
+      name: 'body-progress',
+      component: BodyProgressView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/livros',
+      name: 'books',
+      component: BooksView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/cursos',
+      name: 'courses',
+      component: CoursesView,
       meta: { requiresAuth: true },
     },
   ],
