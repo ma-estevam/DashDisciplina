@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { Menu, X, LogOut } from 'lucide-vue-next'
+import { LogOut, Menu, X } from 'lucide-vue-next'
 import { useRoute } from 'vue-router'
 import NavItem from './NavItem.vue'
 
@@ -41,6 +41,7 @@ function handleLogout() {
         type="button"
         :aria-expanded="isOpen"
         aria-controls="mobile-nav-drawer"
+        aria-label="Abrir mais páginas"
         @click="isOpen = !isOpen"
       >
         <Menu v-if="!isOpen" class="nav-icon" aria-hidden="true" />
@@ -62,11 +63,11 @@ function handleLogout() {
         </button>
       </div>
 
-      <nav class="mobile-drawer-links">
+      <nav class="mobile-drawer-links" aria-label="Mais páginas">
         <NavItem v-for="item in moreItems" :key="item.to" :item="item" />
       </nav>
 
-      <button class="logout-btn mobile-logout" type="button" @click="handleLogout">
+      <button class="logout-btn mobile-logout" type="button" aria-label="Sair da conta" @click="handleLogout">
         <LogOut class="button-icon" aria-hidden="true" />
         Sair
       </button>

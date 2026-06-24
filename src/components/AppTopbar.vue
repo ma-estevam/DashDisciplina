@@ -24,7 +24,7 @@ defineEmits(['logout'])
         {{ currentUser?.name || 'Usuária' }}
       </div>
 
-      <button class="logout-btn" type="button" @click="$emit('logout')">
+      <button class="logout-btn" type="button" aria-label="Sair da conta" @click="$emit('logout')">
         <LogOut class="button-icon" aria-hidden="true" />
         Sair
       </button>

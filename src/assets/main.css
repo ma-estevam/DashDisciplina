@@ -1890,3 +1890,306 @@ textarea:focus-visible {
     bottom: 82px;
   }
 }
+
+/* Correções finais de responsividade e navegação */
+html,
+body,
+#app {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  min-height: 100vh;
+  width: 100%;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  width: 280px;
+  min-width: 280px;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.main-content {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.page-section,
+.dashboard-page,
+.tracker-page {
+  width: 100%;
+  max-width: 1180px;
+}
+
+.nav-menu {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.nav-link {
+  min-width: 0;
+  justify-content: flex-start;
+  flex-direction: row;
+  white-space: nowrap;
+}
+
+.nav-link span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: inherit;
+}
+
+.topbar-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea,
+textarea,
+input,
+select {
+  max-width: 100%;
+}
+
+@media (max-width: 1180px) and (min-width: 821px) {
+  .app-shell {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    padding-bottom: 0;
+  }
+
+  .sidebar {
+    display: flex;
+    position: sticky;
+    top: 0;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: 260px;
+    min-width: 260px;
+    max-width: none;
+    height: 100vh;
+    height: 100dvh;
+    padding: 22px;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .sidebar .brand {
+    display: flex;
+    align-items: center;
+  }
+
+  .sidebar-card {
+    display: block;
+  }
+
+  .mobile-navigation {
+    display: none;
+  }
+
+  .main-content {
+    padding: 24px;
+  }
+
+  .content-grid,
+  .hero-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .app-shell {
+    display: block;
+    padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .mobile-navigation {
+    display: block;
+  }
+
+  .main-content {
+    padding: 14px;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .topbar-actions .user-badge,
+  .topbar-actions .logout-btn {
+    flex: 1 1 auto;
+  }
+
+  .mobile-nav-bar .nav-link,
+  .mobile-more-button {
+    justify-content: center;
+    flex-direction: column;
+    white-space: normal;
+  }
+
+  .mobile-nav-bar .nav-link span,
+  .mobile-more-button span {
+    display: block;
+    max-width: 100%;
+    font-size: 0.68rem;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-drawer-links .nav-link {
+    justify-content: flex-start;
+    flex-direction: row;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .mobile-drawer-links .nav-link span {
+    font-size: 0.92rem;
+  }
+
+  .stats-grid,
+  .dashboard-modules-grid,
+  .content-grid,
+  .routine-options,
+  .habits-grid,
+  .exception-list,
+  .evidence-layout,
+  .tracker-grid,
+  .report-stats,
+  .form-grid,
+  .activity-form-grid,
+  .register-fields,
+  .measurements-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel,
+  .stat-card,
+  .module-summary-card,
+  .routine-option-card,
+  .tracker-card,
+  .register-habit-card {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .page-title-with-action,
+  .routine-toolbar,
+  .section-header,
+  .register-habit-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .form-actions,
+  .hero-actions {
+    width: 100%;
+  }
+
+  .form-actions > *,
+  .hero-actions > *,
+  .page-title-with-action > button {
+    width: 100%;
+  }
+
+  .editable-item,
+  .habit-editable-list .editable-item {
+    grid-template-columns: 1fr;
+  }
+
+  .weekly-row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .weekly-progress {
+    grid-column: 1 / -1;
+  }
+
+  .evidence-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 430px) {
+  .main-content {
+    padding: 10px;
+  }
+
+  .topbar-actions {
+    flex-direction: column;
+  }
+
+  .topbar-actions .user-badge,
+  .topbar-actions .logout-btn {
+    width: 100%;
+  }
+
+  .mobile-nav-bar {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    padding: 6px;
+  }
+
+  .mobile-nav-bar .nav-link,
+  .mobile-more-button {
+    min-height: 52px;
+    padding: 7px 4px;
+  }
+
+  .mobile-nav-bar .nav-link span,
+  .mobile-more-button span {
+    font-size: 0.62rem;
+  }
+
+  .hero-panel {
+    padding: 20px;
+  }
+
+  .panel,
+  .stat-card,
+  .module-summary-card,
+  .routine-option-card,
+  .tracker-card,
+  .register-habit-card {
+    padding: 16px;
+  }
+}
