@@ -200,30 +200,32 @@ export const useRoutineStore = defineStore('routine', {
   }),
 
   getters: {
-  activeRoutine(state) {
-    return (
-      state.routines.find((routine) => routine.id === state.activeRoutineId) ||
-      state.routines[0] ||
-      null
-    )
-  },
+    currentRoutine: (state) => state.activeRoutineId,
 
-  activeRoutineName() {
-    return this.activeRoutine?.name || 'Nenhuma rotina'
-  },
+    activeRoutine(state) {
+      return (
+        state.routines.find((routine) => routine.id === state.activeRoutineId) ||
+        state.routines[0] ||
+        null
+      )
+    },
 
-  activeRoutineType() {
-    return this.activeRoutine?.type || 'Personalizada'
-  },
+    activeRoutineName() {
+      return this.activeRoutine?.name || 'Nenhuma rotina'
+    },
 
-  activeActivities() {
-    return this.activeRoutine?.activities || []
-  },
+    activeRoutineType() {
+      return this.activeRoutine?.type || 'Personalizada'
+    },
 
-  activeHabits() {
-    return this.activeRoutine?.habits || []
+    activeActivities() {
+      return this.activeRoutine?.activities || []
+    },
+
+    activeHabits() {
+      return this.activeRoutine?.habits || []
+    },
   },
-},
 
   actions: {
     async initialize() {
@@ -240,7 +242,9 @@ export const useRoutineStore = defineStore('routine', {
         saveUserData(ROUTINES_KEY, this.routines)
       }
 
-      this.activeRoutineId = savedActiveRoutine || this.routines[0]?.id || null
+      this.activeRoutineId = this.routines.some((routine) => routine.id === savedActiveRoutine)
+        ? savedActiveRoutine
+        : this.routines[0]?.id || null
       this.loaded = true
     },
 
@@ -252,6 +256,10 @@ export const useRoutineStore = defineStore('routine', {
     setActiveRoutine(routineId) {
       this.activeRoutineId = routineId
       this.persist()
+    },
+
+    setRoutine(routineId) {
+      this.setActiveRoutine(routineId)
     },
 
     createRoutine(routineData) {
@@ -267,6 +275,7 @@ export const useRoutineStore = defineStore('routine', {
       this.routines.push(newRoutine)
       this.activeRoutineId = newRoutine.id
       this.persist()
+      return newRoutine
     },
 
     updateRoutine(routineId, routineData) {
@@ -334,6 +343,15 @@ export const useRoutineStore = defineStore('routine', {
       this.persist()
     },
 
+    saveActivity(routineId, activityData) {
+      if (activityData.id) {
+        this.updateActivity(routineId, activityData.id, activityData)
+        return
+      }
+
+      this.addActivity(routineId, activityData)
+    },
+
     addHabit(routineId, habitData) {
       const routine = this.routines.find((item) => item.id === routineId)
 
@@ -343,7 +361,8 @@ export const useRoutineStore = defineStore('routine', {
         id: createId(),
         name: habitData.name,
         description: habitData.description || '',
-        goal: habitData.goal || '',
+        goal: habitData.goal || habitData.dailyGoal || '',
+        dailyGoal: habitData.dailyGoal || habitData.goal || '',
         unit: habitData.unit || '',
         requiresEvidence: !!habitData.requiresEvidence,
       })
@@ -362,7 +381,8 @@ export const useRoutineStore = defineStore('routine', {
 
       habit.name = habitData.name
       habit.description = habitData.description || ''
-      habit.goal = habitData.goal || ''
+      habit.goal = habitData.goal || habitData.dailyGoal || ''
+      habit.dailyGoal = habitData.dailyGoal || habitData.goal || ''
       habit.unit = habitData.unit || ''
       habit.requiresEvidence = !!habitData.requiresEvidence
 
@@ -377,6 +397,15 @@ export const useRoutineStore = defineStore('routine', {
       routine.habits = routine.habits.filter((item) => item.id !== habitId)
 
       this.persist()
+    },
+
+    saveHabit(routineId, habitData) {
+      if (habitData.id) {
+        this.updateHabit(routineId, habitData.id, habitData)
+        return
+      }
+
+      this.addHabit(routineId, habitData)
     },
   },
 })

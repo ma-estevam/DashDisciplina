@@ -6,7 +6,7 @@ import { useRoutineStore } from '../stores/routineStore'
 
 const routineStore = useRoutineStore()
 const disciplineStore = useDisciplineStore()
-routineStore.loadRoutines()
+routineStore.initialize()
 disciplineStore.initialize()
 
 const activeRoutine = computed(() => routineStore.activeRoutine)
@@ -38,7 +38,7 @@ const firstActivity = computed(() => activeRoutine.value?.activities[0] || null)
     <div class="hero-panel">
       <div class="hero-content">
         <span class="eyebrow light">Rotina com propósito</span>
-        <h2>{{ activeRoutine ? activeRoutine.name : 'Crie sua primeira rotina.' }}</h2>
+        <h2>{{ activeRoutine?.name || 'Crie sua primeira rotina.' }}</h2>
         <p>
           {{ activeRoutine?.description || 'Configure horários e hábitos para começar a acompanhar sua constância.' }}
         </p>
@@ -82,7 +82,7 @@ const firstActivity = computed(() => activeRoutine.value?.activities[0] || null)
         <div v-if="habits.length" class="habits-grid">
           <div v-for="habit in habits" :key="habit.id" :class="['habit-card', { 'habit-done': habit.completed }]">
             <div>
-              <strong>{{ habit.name }}</strong>
+              <strong>{{ habit.name || 'Hábito sem nome' }}</strong>
               <p>
                 {{ habit.dailyGoal ? `${habit.dailyGoal} ${habit.unit}` : habit.description || 'Sem meta numérica' }}
               </p>

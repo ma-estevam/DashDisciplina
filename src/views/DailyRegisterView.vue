@@ -5,7 +5,7 @@ import { useRoutineStore } from '../stores/routineStore'
 
 const routineStore = useRoutineStore()
 const disciplineStore = useDisciplineStore()
-routineStore.loadRoutines()
+routineStore.initialize()
 disciplineStore.initialize()
 
 const selectedDate = ref(localDateKey())
@@ -35,9 +35,9 @@ function loadDate() {
 
   entries.value = (activeRoutine.value?.habits || []).map((habit) => ({
     habitId: habit.id,
-    habitName: habit.name,
+    habitName: habit.name || 'Hábito sem nome',
     description: habit.description,
-    dailyGoal: habit.dailyGoal,
+    dailyGoal: habit.dailyGoal || habit.goal,
     unit: habit.unit,
     requiresEvidence: habit.requiresEvidence,
     completed: false,
@@ -157,7 +157,7 @@ function saveRecord() {
         <span class="eyebrow">Registro diário</span>
         <h2>Como foi sua disciplina hoje?</h2>
         <p v-if="activeRoutine">
-          Você está registrando os hábitos de <strong>{{ activeRoutine.name }}</strong>.
+          Você está registrando os hábitos de <strong>{{ activeRoutine?.name || routineStore.activeRoutineName }}</strong>.
         </p>
       </div>
       <div class="date-control">

@@ -1,7 +1,12 @@
 <script setup>
+import { computed } from 'vue'
 import { useRoutineStore } from '../stores/routineStore'
 
 const routineStore = useRoutineStore()
+routineStore.initialize()
+
+const activeRoutine = computed(() => routineStore.activeRoutine)
+const activeActivities = computed(() => routineStore.activeActivities)
 </script>
 
 <template>
@@ -32,32 +37,41 @@ const routineStore = useRoutineStore()
         />
 
         <div class="routine-option-header">
-          <span>{{ routine.badge }}</span>
-          <strong>{{ routine.name }}</strong>
+          <span>{{ routine.type || 'Personalizada' }}</span>
+          <strong>{{ routine.name || 'Rotina sem nome' }}</strong>
         </div>
 
         <p>{{ routine.description }}</p>
       </label>
     </div>
 
-    <article class="panel">
+    <article v-if="activeRoutine" class="panel">
       <div class="section-header">
         <div>
           <span class="eyebrow">Rotina ativa</span>
-          <h3>{{ routineStore.activeRoutine.name }}</h3>
+          <h3>{{ routineStore.activeRoutineName }}</h3>
         </div>
       </div>
 
-      <div class="timeline">
+      <div v-if="activeActivities.length" class="timeline">
         <div
-          v-for="item in routineStore.activeRoutine.schedule"
-          :key="`${item.time}-${item.activity}`"
+          v-for="item in activeActivities"
+          :key="item.id"
           class="timeline-item"
         >
-          <span>{{ item.time }}</span>
-          <p>{{ item.activity }}</p>
+          <span>{{ item.startTime }}</span>
+          <p><strong>{{ item.title }}</strong><small>até {{ item.endTime }}</small></p>
         </div>
       </div>
+      <div v-else class="empty-state compact-empty">
+        <h3>Agenda vazia</h3>
+        <p>Cadastre atividades para montar a timeline desta rotina.</p>
+      </div>
+    </article>
+
+    <article v-else class="panel empty-state">
+      <h3>Nenhuma rotina ativa</h3>
+      <p>Crie uma rotina para começar seus registros.</p>
     </article>
   </section>
 </template>

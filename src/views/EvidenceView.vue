@@ -37,7 +37,9 @@ const groupedByHabit = computed(() => {
   }
 
   for (const habit of habits.value) {
-    if (!groups.has(habit.id)) groups.set(habit.id, { id: habit.id, name: habit.name, items: [] })
+    if (!groups.has(habit.id)) {
+      groups.set(habit.id, { id: habit.id, name: habit.name || 'Hábito sem nome', items: [] })
+    }
   }
 
   return [...groups.values()]
@@ -89,7 +91,7 @@ async function handleFiles(event) {
         date: selectedDate.value,
         routineId: routineStore.activeRoutineId,
         habitId: selectedHabit.value.id,
-        habitName: selectedHabit.value.name,
+        habitName: selectedHabit.value?.name || 'Hábito sem nome',
         note: note.value.trim(),
         image,
         fileName: file.name,
@@ -137,7 +139,9 @@ function formatDate(date) {
           <div class="form-group">
             <label for="habit">Hábito</label>
             <select id="habit" v-model="selectedHabitId">
-              <option v-for="habit in habits" :key="habit.id" :value="habit.id">{{ habit.name }}</option>
+              <option v-for="habit in habits" :key="habit.id" :value="habit.id">
+                {{ habit.name || 'Hábito sem nome' }}
+              </option>
             </select>
           </div>
           <div class="form-group">

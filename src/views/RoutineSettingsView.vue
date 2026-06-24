@@ -79,6 +79,7 @@ function openActivity(activity = null) {
 }
 
 function saveActivity(data) {
+  if (!selectedRoutine.value) return
   routineStore.saveActivity(selectedRoutine.value.id, data)
   activityEditorOpen.value = false
   editingActivity.value = null
@@ -86,6 +87,7 @@ function saveActivity(data) {
 }
 
 function removeActivity(activity) {
+  if (!selectedRoutine.value || !activity) return
   if (!window.confirm(`Excluir a atividade "${activity.title}"?`)) return
   routineStore.deleteActivity(selectedRoutine.value.id, activity.id)
   notify('Atividade excluída.')
@@ -97,6 +99,7 @@ function openHabit(habit = null) {
 }
 
 function saveHabit(data) {
+  if (!selectedRoutine.value) return
   routineStore.saveHabit(selectedRoutine.value.id, data)
   habitEditorOpen.value = false
   editingHabit.value = null
@@ -104,6 +107,7 @@ function saveHabit(data) {
 }
 
 function removeHabit(habit) {
+  if (!selectedRoutine.value || !habit) return
   if (!window.confirm(`Excluir o hábito "${habit.name}"? Os registros anteriores serão preservados.`)) return
   routineStore.deleteHabit(selectedRoutine.value.id, habit.id)
   notify('Hábito excluído.')
@@ -142,7 +146,7 @@ function removeHabit(habit) {
       >
         <div class="routine-option-header">
           <span>{{ routine.id === routineStore.activeRoutineId ? 'Ativa agora' : 'Disponível' }}</span>
-          <strong>{{ routine.name }}</strong>
+          <strong>{{ routine.name || 'Rotina sem nome' }}</strong>
         </div>
         <p>{{ routine.description || 'Sem descrição.' }}</p>
         <small>{{ routine.activities.length }} atividades · {{ routine.habits.length }} hábitos</small>
@@ -161,7 +165,7 @@ function removeHabit(habit) {
       <div class="routine-toolbar panel">
         <div>
           <span class="eyebrow">Editando</span>
-          <h3>{{ selectedRoutine.name }}</h3>
+          <h3>{{ selectedRoutine?.name || routineStore.activeRoutineName }}</h3>
           <p>{{ selectedRoutine.description || 'Adicione uma descrição para esta rotina.' }}</p>
         </div>
         <div class="form-actions">
@@ -226,9 +230,9 @@ function removeHabit(habit) {
 
         <div v-if="selectedRoutine.habits.length" class="editable-list habit-editable-list">
           <article v-for="habit in selectedRoutine.habits" :key="habit.id" class="editable-item">
-            <div class="habit-icon">{{ habit.name.charAt(0).toUpperCase() }}</div>
+            <div class="habit-icon">{{ (habit.name || '?').charAt(0).toUpperCase() }}</div>
             <div class="editable-item-content">
-              <strong>{{ habit.name }}</strong>
+              <strong>{{ habit.name || 'Hábito sem nome' }}</strong>
               <p>{{ habit.description || 'Sem descrição.' }}</p>
               <small>
                 {{ habit.dailyGoal ? `Meta: ${habit.dailyGoal} ${habit.unit}` : 'Sem meta numérica' }}

@@ -92,8 +92,8 @@ export const useDisciplineStore = defineStore('discipline', {
     saveRecord({ date, routine, entries, note }) {
       const snapshot = {
         date,
-        routineId: routine.id,
-        routineName: routine.name,
+        routineId: routine?.id || null,
+        routineName: routine?.name || 'Rotina sem nome',
         plannedHabitCount: entries.length,
         entries: entries.map((entry) => ({ ...entry })),
         note: note?.trim() || '',
