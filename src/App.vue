@@ -4,6 +4,7 @@ import { RouterView, useRoute, useRouter } from 'vue-router'
 import {
   Activity,
   BarChart3,
+  Blocks,
   BookOpen,
   CalendarDays,
   Camera,
@@ -63,6 +64,11 @@ const navItems = [
     label: 'Cursos',
     to: '/cursos',
     icon: GraduationCap,
+  },
+  {
+    label: 'Meus Módulos',
+    to: '/modulos',
+    icon: Blocks,
   },
   {
     label: 'Rotina',

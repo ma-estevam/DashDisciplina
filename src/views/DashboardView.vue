@@ -1,10 +1,19 @@
 <script setup>
 import { computed } from 'vue'
-import { Activity, BookOpen, CalendarClock, CheckCircle2, GraduationCap, ListChecks } from 'lucide-vue-next'
+import {
+  Activity,
+  Blocks,
+  BookOpen,
+  CalendarClock,
+  CheckCircle2,
+  GraduationCap,
+  ListChecks,
+} from 'lucide-vue-next'
 import StatCard from '../components/StatCard.vue'
 import { useBodyProgressStore } from '../stores/bodyProgressStore'
 import { useBooksStore } from '../stores/booksStore'
 import { useCoursesStore } from '../stores/coursesStore'
+import { useCustomModulesStore } from '../stores/customModulesStore'
 import { localDateKey, useDisciplineStore } from '../stores/disciplineStore'
 import { useRoutineStore } from '../stores/routineStore'
 
@@ -13,11 +22,13 @@ const disciplineStore = useDisciplineStore()
 const bodyStore = useBodyProgressStore()
 const booksStore = useBooksStore()
 const coursesStore = useCoursesStore()
+const customStore = useCustomModulesStore()
 routineStore.initialize()
 disciplineStore.initialize()
 bodyStore.initialize()
 booksStore.initialize()
 coursesStore.initialize()
+customStore.initialize()
 
 const activeRoutine = computed(() => routineStore.activeRoutine)
 const todayRecord = computed(() => disciplineStore.recordByDate(localDateKey()))
@@ -54,14 +65,12 @@ function formatDate(date) {
   <section class="dashboard-page">
     <div class="hero-panel">
       <div class="hero-content">
-        <span class="eyebrow light">Rotina com propósito</span>
-        <h2>{{ activeRoutine?.name || 'Crie sua primeira rotina.' }}</h2>
-        <p>
-          {{ activeRoutine?.description || 'Configure horários e hábitos para começar a acompanhar sua constância.' }}
-        </p>
+        <span class="eyebrow light">HubDisciplina</span>
+        <h2>Bem-vinda ao seu HubDisciplina.</h2>
+        <p>Acompanhe sua rotina, seus hábitos, seus estudos e sua evolução em um só lugar.</p>
         <div class="hero-actions">
           <RouterLink to="/registro-diario" class="btn-primary">Registrar meu dia</RouterLink>
-          <RouterLink to="/rotina" class="btn-secondary">Configurar rotina</RouterLink>
+          <RouterLink to="/relatorios" class="btn-secondary">Ver relatórios</RouterLink>
         </div>
       </div>
 
@@ -129,6 +138,25 @@ function formatDate(date) {
         </div>
         <strong>{{ currentCourse?.name || 'Nenhum curso' }}</strong>
         <p>{{ coursesStore.generalProgress }}% de progresso geral · {{ coursesStore.studiedHours }}h estudadas</p>
+      </RouterLink>
+    </section>
+
+    <section v-if="customStore.dashboardModules.length" class="dashboard-modules-grid">
+      <RouterLink
+        v-for="module in customStore.dashboardModules"
+        :key="module.id"
+        :to="`/modulos/${module.id}`"
+        class="module-summary-card"
+      >
+        <div class="module-summary-header">
+          <span class="eyebrow">Módulo personalizado</span>
+          <Blocks class="module-icon" aria-hidden="true" />
+        </div>
+        <strong>{{ module.name || 'Módulo sem nome' }}</strong>
+        <p>
+          {{ module.records?.length || 0 }} registros · último:
+          {{ formatDate(module.records?.[0]?.recordDate) }}
+        </p>
       </RouterLink>
     </section>
 

@@ -14,8 +14,8 @@ defineEmits(['logout'])
 <template>
   <header class="topbar">
     <div>
-      <span class="eyebrow">Sistema de comprovação</span>
-      <h2>Plano de Disciplina Pessoal</h2>
+      <span class="eyebrow">HubDisciplina</span>
+      <h2>Seu centro de rotina e evolução pessoal</h2>
     </div>
 
     <div class="topbar-actions">

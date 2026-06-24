@@ -11,6 +11,8 @@ import RoutineView from '../views/RoutineView.vue'
 import BodyProgressView from '../views/BodyProgressView.vue'
 import BooksView from '../views/BooksView.vue'
 import CoursesView from '../views/CoursesView.vue'
+import CustomModulesView from '../views/CustomModulesView.vue'
+import CustomModuleDetailView from '../views/CustomModuleDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -73,6 +75,18 @@ const router = createRouter({
       path: '/cursos',
       name: 'courses',
       component: CoursesView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/modulos',
+      name: 'custom-modules',
+      component: CustomModulesView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/modulos/:moduleId',
+      name: 'custom-module-detail',
+      component: CustomModuleDetailView,
       meta: { requiresAuth: true },
     },
   ],

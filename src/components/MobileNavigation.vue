@@ -56,7 +56,7 @@ function handleLogout() {
       <div class="mobile-drawer-header">
         <div>
           <span class="eyebrow">Menu</span>
-          <h3>Disciplina 24/7</h3>
+          <h3>HubDisciplina</h3>
         </div>
         <button class="icon-button" type="button" aria-label="Fechar menu" @click="isOpen = false">
           <X aria-hidden="true" />

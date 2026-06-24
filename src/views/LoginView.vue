@@ -63,57 +63,42 @@ function handleSubmit() {
   <main class="auth-page">
     <section class="auth-card">
       <div class="auth-brand">
-        <div class="brand-mark">D</div>
+        <div class="brand-mark">H</div>
 
         <div>
-          <h1>Disciplina 24/7</h1>
-          <p>Sistema de comprovação pessoal</p>
+          <h1>HubDisciplina</h1>
+          <p>Seu centro de rotina e evolução pessoal</p>
         </div>
       </div>
 
       <div class="auth-content">
         <span class="eyebrow">
-          {{ isRegisterMode ? 'Criar conta' : 'Acessar sistema' }}
+          {{ isRegisterMode ? 'Criar conta' : 'Acessar hub' }}
         </span>
 
         <h2>
-          {{ isRegisterMode ? 'Comece seu plano de disciplina.' : 'Entre para registrar sua rotina.' }}
+          {{ isRegisterMode ? 'Comece a organizar seu progresso.' : 'Entre no seu HubDisciplina.' }}
         </h2>
 
         <p>
-          Acompanhe seus hábitos, evidências, relatórios e dias de exceção em um só lugar.
+          Acompanhe sua rotina, registre evidências e visualize sua evolução pessoal em um só lugar.
         </p>
       </div>
 
       <form class="auth-form" @submit.prevent="handleSubmit">
         <div v-if="isRegisterMode" class="form-group">
           <label for="name">Nome</label>
-          <input
-            id="name"
-            v-model="name"
-            type="text"
-            placeholder="Seu nome"
-          />
+          <input id="name" v-model="name" type="text" placeholder="Seu nome" />
         </div>
 
         <div class="form-group">
           <label for="email">E-mail</label>
-          <input
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="seuemail@email.com"
-          />
+          <input id="email" v-model="email" type="email" placeholder="seuemail@email.com" />
         </div>
 
         <div class="form-group">
           <label for="password">Senha</label>
-          <input
-            id="password"
-            v-model="password"
-            type="password"
-            placeholder="Digite sua senha"
-          />
+          <input id="password" v-model="password" type="password" placeholder="Digite sua senha" />
         </div>
 
         <p v-if="errorMessage" class="auth-error">
@@ -128,8 +113,6 @@ function handleSubmit() {
       <button class="auth-switch" type="button" @click="toggleMode">
         {{ isRegisterMode ? 'Já tenho conta' : 'Criar uma conta' }}
       </button>
-
-      
     </section>
   </main>
 </template>
