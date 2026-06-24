@@ -1,253 +1,361 @@
 import { defineStore } from 'pinia'
-import { useAuthStore } from './authStore'
+import { loadUserData, saveUserData } from '../services/storageService'
 
-const STORAGE_KEY = 'disciplina_247_routines_v1'
-const LEGACY_ROUTINE_KEY = 'disciplina_247_routine_type'
+const ROUTINES_KEY = 'routines'
+const ACTIVE_ROUTINE_KEY = 'active_routine'
 
-function createDefaultRoutines() {
-  const now = new Date().toISOString()
-
-  return [
-    {
-      id: crypto.randomUUID(),
-      legacyId: 'vacation',
-      name: 'Rotina de Férias',
-      description:
-        'Rotina mais completa, com mais tempo para treino, estudo, cozinha, leitura, crochê e descanso.',
-      type: 'vacation',
-      createdAt: now,
-      updatedAt: now,
-      activities: [
-        { id: crypto.randomUUID(), startTime: '06:15', endTime: '07:30', title: 'Treino da manhã', description: '' },
-        { id: crypto.randomUUID(), startTime: '08:10', endTime: '10:10', title: 'Estudo profundo', description: '' },
-        { id: crypto.randomUUID(), startTime: '11:40', endTime: '12:40', title: 'Cozinhar e preparar almoço', description: '' },
-        { id: crypto.randomUUID(), startTime: '13:30', endTime: '14:00', title: 'Leitura leve ou revisão', description: '' },
-        { id: crypto.randomUUID(), startTime: '17:20', endTime: '18:20', title: 'Crochê', description: '' },
-        { id: crypto.randomUUID(), startTime: '22:30', endTime: '22:45', title: 'Preparar o dia seguinte', description: '' },
-      ],
-      habits: createDefaultHabits(),
-    },
-    {
-      id: crypto.randomUUID(),
-      legacyId: 'college',
-      name: 'Rotina de Faculdade',
-      description:
-        'Rotina adaptada para os dias de aula, considerando saída às 16h50 e retorno por volta de 00h.',
-      type: 'college',
-      createdAt: now,
-      updatedAt: now,
-      activities: [
-        { id: crypto.randomUUID(), startTime: '08:30', endTime: '09:00', title: 'Organizar o início do dia', description: '' },
-        { id: crypto.randomUUID(), startTime: '09:00', endTime: '10:15', title: 'Treino da manhã', description: '' },
-        { id: crypto.randomUUID(), startTime: '11:00', endTime: '12:20', title: 'Estudo principal', description: '' },
-        { id: crypto.randomUUID(), startTime: '12:20', endTime: '13:20', title: 'Cozinhar e almoçar', description: '' },
-        { id: crypto.randomUUID(), startTime: '14:00', endTime: '15:30', title: 'Tarefas da faculdade', description: '' },
-        { id: crypto.randomUUID(), startTime: '16:50', endTime: '23:59', title: 'Faculdade', description: '' },
-      ],
-      habits: createDefaultHabits(),
-    },
-  ]
+function createId() {
+  return crypto.randomUUID()
 }
 
-function createDefaultHabits() {
+function getDefaultRoutines() {
   return [
-    { id: crypto.randomUUID(), name: 'Treino', description: 'Movimentar o corpo e cuidar da saúde.', dailyGoal: 75, unit: 'minutos', requiresEvidence: true },
-    { id: crypto.randomUUID(), name: 'Estudo', description: 'Cumprir os blocos de foco planejados.', dailyGoal: 2, unit: 'horas', requiresEvidence: false },
-    { id: crypto.randomUUID(), name: 'Cozinhar', description: 'Manter a alimentação organizada.', dailyGoal: 1, unit: 'vezes', requiresEvidence: false },
-    { id: crypto.randomUUID(), name: 'Leitura', description: 'Reservar um momento para ler.', dailyGoal: 20, unit: 'minutos', requiresEvidence: false },
-    { id: crypto.randomUUID(), name: 'Crochê', description: 'Praticar um descanso criativo.', dailyGoal: 30, unit: 'minutos', requiresEvidence: false },
-    { id: crypto.randomUUID(), name: 'Descanso', description: 'Priorizar sono e pausas reais.', dailyGoal: 8, unit: 'horas', requiresEvidence: false },
+    {
+      id: 'vacation',
+      name: 'Férias',
+      description: 'Rotina completa para o período de férias.',
+      type: 'Férias',
+      activities: [
+        {
+          id: createId(),
+          startTime: '06:15',
+          endTime: '07:30',
+          title: 'Treino',
+          description: 'Treino da manhã — 1h15',
+        },
+        {
+          id: createId(),
+          startTime: '08:10',
+          endTime: '10:10',
+          title: 'Estudo profundo',
+          description: 'Bloco principal de estudo.',
+        },
+        {
+          id: createId(),
+          startTime: '11:40',
+          endTime: '12:40',
+          title: 'Cozinhar',
+          description: 'Preparar almoço e organizar alimentação.',
+        },
+        {
+          id: createId(),
+          startTime: '17:20',
+          endTime: '18:20',
+          title: 'Crochê',
+          description: 'Descanso ativo.',
+        },
+      ],
+      habits: [
+        {
+          id: createId(),
+          name: 'Treino',
+          description: 'Treinar pela manhã.',
+          goal: '1h15',
+          unit: 'tempo',
+          requiresEvidence: true,
+        },
+        {
+          id: createId(),
+          name: 'Estudo',
+          description: 'Estudar com foco.',
+          goal: '2h',
+          unit: 'tempo',
+          requiresEvidence: true,
+        },
+        {
+          id: createId(),
+          name: 'Cozinhar',
+          description: 'Preparar ou organizar alimentação.',
+          goal: '1 refeição',
+          unit: 'vezes',
+          requiresEvidence: true,
+        },
+        {
+          id: createId(),
+          name: 'Leitura',
+          description: 'Ler um pouco todos os dias.',
+          goal: '10 minutos',
+          unit: 'tempo',
+          requiresEvidence: false,
+        },
+        {
+          id: createId(),
+          name: 'Crochê',
+          description: 'Praticar crochê.',
+          goal: '30 minutos',
+          unit: 'tempo',
+          requiresEvidence: true,
+        },
+        {
+          id: createId(),
+          name: 'Descanso',
+          description: 'Dormir e desacelerar.',
+          goal: '7h',
+          unit: 'tempo',
+          requiresEvidence: false,
+        },
+      ],
+    },
+    {
+      id: 'college',
+      name: 'Faculdade',
+      description: 'Rotina adaptada para dias de aula.',
+      type: 'Faculdade',
+      activities: [
+        {
+          id: createId(),
+          startTime: '08:30',
+          endTime: '09:00',
+          title: 'Acordar',
+          description: 'Organizar o início do dia.',
+        },
+        {
+          id: createId(),
+          startTime: '09:00',
+          endTime: '10:15',
+          title: 'Treino',
+          description: 'Treino da manhã — 1h15.',
+        },
+        {
+          id: createId(),
+          startTime: '11:00',
+          endTime: '12:20',
+          title: 'Estudo',
+          description: 'Estudo principal antes da faculdade.',
+        },
+        {
+          id: createId(),
+          startTime: '15:30',
+          endTime: '16:50',
+          title: 'Se arrumar',
+          description: 'Preparação para sair de casa.',
+        },
+        {
+          id: createId(),
+          startTime: '16:50',
+          endTime: '00:00',
+          title: 'Faculdade',
+          description: 'Deslocamento, aula e retorno.',
+        },
+      ],
+      habits: [
+        {
+          id: createId(),
+          name: 'Treino',
+          description: 'Treino de 1h15 pela manhã.',
+          goal: '1h15',
+          unit: 'tempo',
+          requiresEvidence: true,
+        },
+        {
+          id: createId(),
+          name: 'Estudo',
+          description: 'Estudo antes da faculdade.',
+          goal: '1h',
+          unit: 'tempo',
+          requiresEvidence: true,
+        },
+        {
+          id: createId(),
+          name: 'Cozinhar',
+          description: 'Alimentação organizada.',
+          goal: '1 refeição',
+          unit: 'vezes',
+          requiresEvidence: true,
+        },
+        {
+          id: createId(),
+          name: 'Leitura',
+          description: 'Leitura leve no dia.',
+          goal: '10 minutos',
+          unit: 'tempo',
+          requiresEvidence: false,
+        },
+        {
+          id: createId(),
+          name: 'Crochê',
+          description: 'Crochê leve se houver tempo.',
+          goal: '15 minutos',
+          unit: 'tempo',
+          requiresEvidence: true,
+        },
+        {
+          id: createId(),
+          name: 'Descanso',
+          description: 'Desacelerar ao chegar em casa.',
+          goal: 'dormir cedo',
+          unit: 'qualidade',
+          requiresEvidence: false,
+        },
+      ],
+    },
   ]
-}
-
-function readStorage() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { version: 1, users: {} }
-  } catch {
-    return { version: 1, users: {} }
-  }
 }
 
 export const useRoutineStore = defineStore('routine', {
   state: () => ({
-    userId: null,
     routines: [],
     activeRoutineId: null,
+    loaded: false,
   }),
 
   getters: {
-    activeRoutine: (state) =>
-      state.routines.find((routine) => routine.id === state.activeRoutineId) || null,
+    activeRoutine(state) {
+      return (
+        state.routines.find((routine) => routine.id === state.activeRoutineId) ||
+        state.routines[0]
+      )
+    },
   },
 
   actions: {
-    initialize() {
-      const authStore = useAuthStore()
-      const userId = authStore.currentUser?.id
+    loadRoutines() {
+      const savedRoutines = loadUserData(ROUTINES_KEY, null)
+      const savedActiveRoutine = loadUserData(ACTIVE_ROUTINE_KEY, null)
 
-      if (!userId) {
-        this.userId = null
-        this.routines = []
-        this.activeRoutineId = null
-        return
+      if (savedRoutines && Array.isArray(savedRoutines) && savedRoutines.length > 0) {
+        this.routines = savedRoutines
+      } else {
+        this.routines = getDefaultRoutines()
+        saveUserData(ROUTINES_KEY, this.routines)
       }
 
-      if (this.userId === userId && this.routines.length) return
-
-      const storage = readStorage()
-      let userData = storage.users[userId]
-
-      if (!userData) {
-        const routines = createDefaultRoutines()
-        const legacyRoutine = localStorage.getItem(LEGACY_ROUTINE_KEY)
-        const activeRoutine =
-          routines.find((routine) => routine.legacyId === legacyRoutine) || routines[0]
-
-        userData = {
-          activeRoutineId: activeRoutine.id,
-          routines,
-        }
-        storage.users[userId] = userData
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(storage))
-      }
-
-      this.userId = userId
-      this.routines = userData.routines || []
-      this.activeRoutineId =
-        userData.activeRoutineId &&
-        this.routines.some((routine) => routine.id === userData.activeRoutineId)
-          ? userData.activeRoutineId
-          : this.routines[0]?.id || null
+      this.activeRoutineId = savedActiveRoutine || this.routines[0]?.id || null
+      this.loaded = true
     },
 
     persist() {
-      if (!this.userId) return
-
-      const storage = readStorage()
-      storage.users[this.userId] = {
-        activeRoutineId: this.activeRoutineId,
-        routines: this.routines,
-      }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(storage))
+      saveUserData(ROUTINES_KEY, this.routines)
+      saveUserData(ACTIVE_ROUTINE_KEY, this.activeRoutineId)
     },
 
     setActiveRoutine(routineId) {
-      if (!this.routines.some((routine) => routine.id === routineId)) return
       this.activeRoutineId = routineId
       this.persist()
     },
 
-    createRoutine(data) {
-      const now = new Date().toISOString()
-      const routine = {
-        id: crypto.randomUUID(),
-        name: data.name.trim(),
-        description: data.description?.trim() || '',
-        type: data.type || 'custom',
-        createdAt: now,
-        updatedAt: now,
+    createRoutine(routineData) {
+      const newRoutine = {
+        id: createId(),
+        name: routineData.name,
+        description: routineData.description || '',
+        type: routineData.type || 'Personalizada',
         activities: [],
         habits: [],
       }
 
-      this.routines.push(routine)
-      if (!this.activeRoutineId) this.activeRoutineId = routine.id
+      this.routines.push(newRoutine)
+      this.activeRoutineId = newRoutine.id
       this.persist()
-      return routine
     },
 
-    updateRoutine(routineId, data) {
+    updateRoutine(routineId, routineData) {
       const routine = this.routines.find((item) => item.id === routineId)
+
       if (!routine) return
 
-      routine.name = data.name.trim()
-      routine.description = data.description?.trim() || ''
-      routine.type = data.type || 'custom'
-      routine.updatedAt = new Date().toISOString()
+      routine.name = routineData.name
+      routine.description = routineData.description
+      routine.type = routineData.type
+
       this.persist()
     },
 
     deleteRoutine(routineId) {
-      if (this.routines.length === 1) {
-        throw new Error('Crie outra rotina antes de excluir a única rotina existente.')
-      }
-
       this.routines = this.routines.filter((routine) => routine.id !== routineId)
+
       if (this.activeRoutineId === routineId) {
         this.activeRoutineId = this.routines[0]?.id || null
       }
+
       this.persist()
     },
 
-    saveActivity(routineId, data) {
+    addActivity(routineId, activityData) {
       const routine = this.routines.find((item) => item.id === routineId)
+
       if (!routine) return
 
-      const activity = data.id
-        ? routine.activities.find((item) => item.id === data.id)
-        : null
+      routine.activities.push({
+        id: createId(),
+        startTime: activityData.startTime,
+        endTime: activityData.endTime,
+        title: activityData.title,
+        description: activityData.description || '',
+      })
 
-      if (activity) {
-        Object.assign(activity, {
-          startTime: data.startTime,
-          endTime: data.endTime,
-          title: data.title.trim(),
-          description: data.description?.trim() || '',
-        })
-      } else {
-        routine.activities.push({
-          id: crypto.randomUUID(),
-          startTime: data.startTime,
-          endTime: data.endTime,
-          title: data.title.trim(),
-          description: data.description?.trim() || '',
-        })
-      }
+      this.persist()
+    },
 
-      routine.activities.sort((a, b) => a.startTime.localeCompare(b.startTime))
-      routine.updatedAt = new Date().toISOString()
+    updateActivity(routineId, activityId, activityData) {
+      const routine = this.routines.find((item) => item.id === routineId)
+
+      if (!routine) return
+
+      const activity = routine.activities.find((item) => item.id === activityId)
+
+      if (!activity) return
+
+      activity.startTime = activityData.startTime
+      activity.endTime = activityData.endTime
+      activity.title = activityData.title
+      activity.description = activityData.description || ''
+
       this.persist()
     },
 
     deleteActivity(routineId, activityId) {
       const routine = this.routines.find((item) => item.id === routineId)
+
       if (!routine) return
+
       routine.activities = routine.activities.filter((item) => item.id !== activityId)
-      routine.updatedAt = new Date().toISOString()
+
       this.persist()
     },
 
-    saveHabit(routineId, data) {
+    addHabit(routineId, habitData) {
       const routine = this.routines.find((item) => item.id === routineId)
+
       if (!routine) return
 
-      const habit = data.id ? routine.habits.find((item) => item.id === data.id) : null
-      const values = {
-        name: data.name.trim(),
-        description: data.description?.trim() || '',
-        dailyGoal:
-          data.dailyGoal === '' || data.dailyGoal === null
-            ? null
-            : Number(data.dailyGoal),
-        unit: data.unit || '',
-        requiresEvidence: Boolean(data.requiresEvidence),
-      }
+      routine.habits.push({
+        id: createId(),
+        name: habitData.name,
+        description: habitData.description || '',
+        goal: habitData.goal || '',
+        unit: habitData.unit || '',
+        requiresEvidence: !!habitData.requiresEvidence,
+      })
 
-      if (habit) {
-        Object.assign(habit, values)
-      } else {
-        routine.habits.push({ id: crypto.randomUUID(), ...values })
-      }
+      this.persist()
+    },
 
-      routine.updatedAt = new Date().toISOString()
+    updateHabit(routineId, habitId, habitData) {
+      const routine = this.routines.find((item) => item.id === routineId)
+
+      if (!routine) return
+
+      const habit = routine.habits.find((item) => item.id === habitId)
+
+      if (!habit) return
+
+      habit.name = habitData.name
+      habit.description = habitData.description || ''
+      habit.goal = habitData.goal || ''
+      habit.unit = habitData.unit || ''
+      habit.requiresEvidence = !!habitData.requiresEvidence
+
       this.persist()
     },
 
     deleteHabit(routineId, habitId) {
       const routine = this.routines.find((item) => item.id === routineId)
+
       if (!routine) return
+
       routine.habits = routine.habits.filter((item) => item.id !== habitId)
-      routine.updatedAt = new Date().toISOString()
+
       this.persist()
     },
   },

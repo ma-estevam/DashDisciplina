@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { supabase } from '../services/supabase'
 
 import DashboardView from '../views/DashboardView.vue'
 import DailyRegisterView from '../views/DailyRegisterView.vue'
@@ -6,9 +7,7 @@ import ReportsView from '../views/ReportsView.vue'
 import ExceptionsView from '../views/ExceptionsView.vue'
 import EvidenceView from '../views/EvidenceView.vue'
 import LoginView from '../views/LoginView.vue'
-import RoutineSettingsView from '../views/RoutineSettingsView.vue'
-
-const SESSION_KEY = 'disciplina_247_current_user'
+import RoutineView from '../views/RoutineView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,64 +16,50 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView,
-      meta: {
-        public: true,
-      },
+      meta: { public: true },
     },
     {
       path: '/',
       name: 'dashboard',
       component: DashboardView,
-      meta: {
-        requiresAuth: true,
-      },
+      meta: { requiresAuth: true },
     },
     {
       path: '/rotina',
       name: 'routine',
-      component: RoutineSettingsView,
-      meta: {
-        requiresAuth: true,
-      },
+      component: RoutineView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/registro-diario',
       name: 'daily-register',
       component: DailyRegisterView,
-      meta: {
-        requiresAuth: true,
-      },
+      meta: { requiresAuth: true },
     },
     {
       path: '/relatorios',
       name: 'reports',
       component: ReportsView,
-      meta: {
-        requiresAuth: true,
-      },
+      meta: { requiresAuth: true },
     },
     {
       path: '/excecoes',
       name: 'exceptions',
       component: ExceptionsView,
-      meta: {
-        requiresAuth: true,
-      },
+      meta: { requiresAuth: true },
     },
     {
       path: '/evidencias',
       name: 'evidences',
       component: EvidenceView,
-      meta: {
-        requiresAuth: true,
-      },
+      meta: { requiresAuth: true },
     },
   ],
 })
 
-router.beforeEach((to) => {
-  const currentUser = localStorage.getItem(SESSION_KEY)
-  const isLoggedIn = !!currentUser
+router.beforeEach(async (to) => {
+  const { data } = await supabase.auth.getSession()
+  const isLoggedIn = Boolean(data.session)
 
   if (to.meta.requiresAuth && !isLoggedIn) {
     return '/login'

@@ -1,97 +1,92 @@
 import { defineStore } from 'pinia'
-
-const USERS_KEY = 'disciplina_247_users'
-const SESSION_KEY = 'disciplina_247_current_user'
-
-function getSavedUsers() {
-  const savedUsers = localStorage.getItem(USERS_KEY)
-
-  if (savedUsers) {
-    return JSON.parse(savedUsers)
-  }
-
-  const defaultUsers = [
-    {
-      id: crypto.randomUUID(),
-      name: 'Maria',
-      email: 'maria@disciplina.com',
-      password: '123456',
-    },
-  ]
-
-  localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers))
-
-  return defaultUsers
-}
+import { supabase } from '../services/supabase'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    users: getSavedUsers(),
-    currentUser: JSON.parse(localStorage.getItem(SESSION_KEY)) || null,
+    currentUser: null,
+    loading: false,
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.currentUser,
+    isAuthenticated: (state) => Boolean(state.currentUser),
   },
 
   actions: {
-    saveUsers() {
-      localStorage.setItem(USERS_KEY, JSON.stringify(this.users))
-    },
+    async restoreSession() {
+      const { data, error } = await supabase.auth.getSession()
 
-    register({ name, email, password }) {
-      const userAlreadyExists = this.users.some(
-        (user) => user.email.toLowerCase() === email.toLowerCase()
-      )
-
-      if (userAlreadyExists) {
-        throw new Error('Este e-mail já está cadastrado.')
+      if (error || !data.session?.user) {
+        this.currentUser = null
+        return
       }
 
-      const newUser = {
-        id: crypto.randomUUID(),
-        name,
-        email,
+      const user = data.session.user
+
+      this.currentUser = {
+        id: user.id,
+        email: user.email,
+        name: user.user_metadata?.name || user.email,
+      }
+    },
+
+    async register({ name, email, password }) {
+      this.loading = true
+
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
         password,
+        options: {
+          data: {
+            name: name.trim(),
+          },
+        },
+      })
+
+      this.loading = false
+
+      if (error) {
+        throw new Error(error.message)
       }
 
-      this.users.push(newUser)
-      this.saveUsers()
-
-      const userSession = {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-      }
-
-      this.currentUser = userSession
-      localStorage.setItem(SESSION_KEY, JSON.stringify(userSession))
-    },
-
-    login({ email, password }) {
-      const user = this.users.find(
-        (item) =>
-          item.email.toLowerCase() === email.toLowerCase() &&
-          item.password === password
-      )
+      const user = data.user
 
       if (!user) {
+        throw new Error('Não foi possível criar o usuário.')
+      }
+
+      this.currentUser = {
+        id: user.id,
+        email: user.email,
+        name: name.trim(),
+      }
+    },
+
+    async login({ email, password }) {
+      this.loading = true
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      })
+
+      this.loading = false
+
+      if (error) {
         throw new Error('E-mail ou senha inválidos.')
       }
 
-      const userSession = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      }
+      const user = data.user
 
-      this.currentUser = userSession
-      localStorage.setItem(SESSION_KEY, JSON.stringify(userSession))
+      this.currentUser = {
+        id: user.id,
+        email: user.email,
+        name: user.user_metadata?.name || user.email,
+      }
     },
 
-    logout() {
+    async logout() {
+      await supabase.auth.signOut()
       this.currentUser = null
-      localStorage.removeItem(SESSION_KEY)
     },
   },
 })
