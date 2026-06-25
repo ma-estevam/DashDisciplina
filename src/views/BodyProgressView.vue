@@ -87,9 +87,6 @@ function formatDate(date) {
       <BodyProgressForm :record="editingRecord" @save="saveRecord" @cancel="editorOpen = false" />
     </article>
 
-    <p v-if="bodyStore.usingLocalFallback" class="feedback-message feedback-warning">
-      Salvando temporariamente no navegador até as tabelas do Supabase estarem disponíveis.
-    </p>
 
     <div v-if="bodyStore.sortedRecords.length" class="tracker-grid">
       <BodyProgressCard

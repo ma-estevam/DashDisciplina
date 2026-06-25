@@ -170,11 +170,17 @@ function routineRow(routine, userId, isActive = false) {
     color: routine.color || DEFAULT_COLOR,
     routine_type: routine.routineType || routine.type || 'custom',
     is_active: isActive,
-    weekly_goal_percent: Number(routine.weeklyGoalPercent || routine.weekly_goal_percent || 70),
+    weekly_goal_percent: Number(routine.weeklyGoalPercent ?? routine.weekly_goal_percent ?? 70),
     start_date: routine.startDate || null,
     end_date: routine.endDate || null,
     updated_at: nowIso(),
   }
+}
+
+function routineUpdateRow(routine, userId, isActive = false) {
+  const row = routineRow(routine, userId, isActive)
+  delete row.id
+  return row
 }
 
 function activityRow(activity, routineId, userId, position = 0) {
@@ -283,7 +289,9 @@ export const useRoutineStore = defineStore('routine', {
         }
 
         if (!routinesData?.length) {
-          await this.seedDefaultRoutines(user.id)
+          this.routines = []
+          this.activeRoutineId = null
+          this.loaded = true
           return
         }
 
@@ -310,6 +318,7 @@ export const useRoutineStore = defineStore('routine', {
           this.routines.find((routine) => routine.isActive)?.id || this.routines[0]?.id || null
         this.loaded = true
       } catch (error) {
+        console.error('Erro ao carregar rotinas:', error)
         this.error = error.message || 'Não foi possível carregar suas rotinas.'
         this.routines = []
         this.activeRoutineId = null
@@ -334,7 +343,10 @@ export const useRoutineStore = defineStore('routine', {
         .eq('routine_id', routineId)
         .order('position', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao carregar atividades:', error)
+        throw error
+      }
       const routine = this.routines.find((item) => item.id === routineId)
       const activities = (data || []).map(toActivity)
       if (routine) routine.activities = activities
@@ -351,7 +363,10 @@ export const useRoutineStore = defineStore('routine', {
         .eq('routine_id', routineId)
         .order('position', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao carregar hábitos:', error)
+        throw error
+      }
       const routine = this.routines.find((item) => item.id === routineId)
       const habits = (data || []).map(toHabit)
       if (routine) routine.habits = habits
@@ -370,20 +385,29 @@ export const useRoutineStore = defineStore('routine', {
           .from('user_routines')
           .insert(routineRow(routine, userId, routineIndex === 0))
 
-        if (routineError) throw routineError
+        if (routineError) {
+          console.error('Erro ao criar rotina inicial:', routineError)
+          throw routineError
+        }
 
         if (routine.activities.length) {
           const { error } = await supabase
             .from('routine_activities')
             .insert(routine.activities.map((activity, index) => activityRow(activity, routine.id, userId, index)))
-          if (error) throw error
+          if (error) {
+            console.error('Erro ao criar atividades iniciais:', error)
+            throw error
+          }
         }
 
         if (routine.habits.length) {
           const { error } = await supabase
             .from('routine_habits')
             .insert(routine.habits.map((habit, index) => habitRow(habit, routine.id, userId, index)))
-          if (error) throw error
+          if (error) {
+            console.error('Erro ao criar hábitos iniciais:', error)
+            throw error
+          }
         }
       }
 
@@ -395,7 +419,10 @@ export const useRoutineStore = defineStore('routine', {
       const previousActiveId = this.activeRoutineId
 
       const { error } = await supabase.from('user_routines').update({ is_active: false }).eq('user_id', userId)
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao desativar rotinas antes de ativar outra:', error)
+        throw error
+      }
 
       const { error: activeError } = await supabase
         .from('user_routines')
@@ -404,6 +431,7 @@ export const useRoutineStore = defineStore('routine', {
         .eq('user_id', userId)
 
       if (activeError) {
+        console.error('Erro ao ativar rotina:', activeError)
         this.activeRoutineId = previousActiveId
         throw activeError
       }
@@ -428,7 +456,15 @@ export const useRoutineStore = defineStore('routine', {
         habits: [],
       }
 
-      await supabase.from('user_routines').update({ is_active: false }).eq('user_id', userId)
+      const { error: deactivateError } = await supabase
+        .from('user_routines')
+        .update({ is_active: false })
+        .eq('user_id', userId)
+
+      if (deactivateError) {
+        console.error('Erro ao preparar criação de rotina:', deactivateError)
+        throw deactivateError
+      }
 
       const { data, error } = await supabase
         .from('user_routines')
@@ -436,7 +472,10 @@ export const useRoutineStore = defineStore('routine', {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao criar rotina:', error)
+        throw error
+      }
 
       const created = toRoutine(data, [], [])
       this.routines = this.routines.map((routine) => ({ ...routine, isActive: false }))
@@ -450,13 +489,16 @@ export const useRoutineStore = defineStore('routine', {
       const current = this.routines.find((item) => item.id === routineId)
       const { data, error } = await supabase
         .from('user_routines')
-        .update(routineRow({ id: routineId, ...routineData }, userId, current?.isActive || false))
+        .update(routineUpdateRow({ id: routineId, ...routineData }, userId, current?.isActive || false))
         .eq('id', routineId)
         .eq('user_id', userId)
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao atualizar rotina:', error)
+        throw error
+      }
 
       const index = this.routines.findIndex((item) => item.id === routineId)
       if (index !== -1) {
@@ -477,7 +519,10 @@ export const useRoutineStore = defineStore('routine', {
 
       const wasActive = this.activeRoutineId === routineId
       const { error } = await supabase.from('user_routines').delete().eq('id', routineId).eq('user_id', userId)
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao excluir rotina:', error)
+        throw error
+      }
 
       this.routines = this.routines.filter((routine) => routine.id !== routineId)
 
@@ -493,7 +538,10 @@ export const useRoutineStore = defineStore('routine', {
 
       const row = activityRow(activityData, routineId, userId, routine.activities.length)
       const { data, error } = await supabase.from('routine_activities').insert(row).select().single()
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao criar atividade:', error)
+        throw error
+      }
 
       const activity = toActivity(data)
       routine.activities.push(activity)
@@ -514,7 +562,10 @@ export const useRoutineStore = defineStore('routine', {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao atualizar atividade:', error)
+        throw error
+      }
 
       const index = routine.activities.findIndex((item) => item.id === activityId)
       const activity = toActivity(data)
@@ -528,7 +579,10 @@ export const useRoutineStore = defineStore('routine', {
       if (!routine) return
 
       const { error } = await supabase.from('routine_activities').delete().eq('id', activityId).eq('user_id', userId)
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao excluir atividade:', error)
+        throw error
+      }
 
       routine.activities = routine.activities.filter((item) => item.id !== activityId)
     },
@@ -545,7 +599,10 @@ export const useRoutineStore = defineStore('routine', {
 
       const row = habitRow(habitData, routineId, userId, routine.habits.length)
       const { data, error } = await supabase.from('routine_habits').insert(row).select().single()
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao criar hábito:', error)
+        throw error
+      }
 
       const habit = toHabit(data)
       routine.habits.push(habit)
@@ -566,7 +623,10 @@ export const useRoutineStore = defineStore('routine', {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao atualizar hábito:', error)
+        throw error
+      }
 
       const index = routine.habits.findIndex((item) => item.id === habitId)
       const habit = toHabit(data)
@@ -580,7 +640,10 @@ export const useRoutineStore = defineStore('routine', {
       if (!routine) return
 
       const { error } = await supabase.from('routine_habits').delete().eq('id', habitId).eq('user_id', userId)
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao excluir hábito:', error)
+        throw error
+      }
 
       routine.habits = routine.habits.filter((item) => item.id !== habitId)
     },

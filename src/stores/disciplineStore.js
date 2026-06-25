@@ -300,11 +300,15 @@ export const useDisciplineStore = defineStore('discipline', {
     },
 
     async addEvidence(evidence) {
-      const dailyRecord = await this.ensureDailyRecord({
-        date: evidence.date,
-        routine: { id: evidence.routineId, name: evidence.routineName || 'Rotina sem nome' },
-        entries: [],
-      })
+      let dailyRecord = this.recordByDate(evidence.date)
+
+      if (!dailyRecord) {
+        dailyRecord = await this.ensureDailyRecord({
+          date: evidence.date,
+          routine: { id: evidence.routineId, name: evidence.routineName || 'Rotina sem nome' },
+          entries: [],
+        })
+      }
 
       const log = await this.upsertHabitLog(dailyRecord, {
         habitId: evidence.habitId,

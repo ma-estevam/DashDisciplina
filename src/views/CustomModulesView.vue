@@ -65,10 +65,6 @@ async function deleteModule(module) {
     </div>
 
     <p v-if="message" :class="['feedback-message', `feedback-${messageType}`]">{{ message }}</p>
-    <p v-if="customStore.usingLocalFallback" class="feedback-message feedback-warning">
-      Salvando temporariamente no navegador até as tabelas de módulos personalizados estarem disponíveis no Supabase.
-    </p>
-
     <article v-if="editorOpen" class="panel editor-panel">
       <CustomModuleForm :module="editingModule" @save="saveModule" @cancel="editorOpen = false" />
     </article>

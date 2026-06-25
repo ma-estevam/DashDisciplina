@@ -60,8 +60,9 @@ async function saveRoutine(data) {
       notify('Nova rotina criada.')
     }
     routineEditorOpen.value = false
-  } catch {
-    notify('Não foi possível salvar a rotina no banco.', 'error')
+  } catch (error) {
+    console.error('Erro ao salvar rotina:', error)
+    notify('Não foi possível salvar a rotina. Verifique os dados e tente novamente.', 'error')
   }
 }
 
@@ -70,7 +71,8 @@ async function activateRoutine(routineId) {
     await routineStore.setActiveRoutine(routineId)
     selectedRoutineId.value = routineId
     notify('Rotina ativa alterada.')
-  } catch {
+  } catch (error) {
+    console.error('Erro ao ativar rotina:', error)
     notify('Não foi possível alterar a rotina ativa.', 'error')
   }
 }
@@ -84,6 +86,7 @@ async function removeRoutine() {
     selectedRoutineId.value = routineStore.activeRoutineId
     notify('Rotina excluída.')
   } catch (error) {
+    console.error('Erro ao excluir rotina:', error)
     notify(error.message || 'Não foi possível excluir a rotina.', 'error')
   }
 }
@@ -101,8 +104,9 @@ async function saveActivity(data) {
     activityEditorOpen.value = false
     editingActivity.value = null
     notify(data.id ? 'Atividade atualizada.' : 'Atividade adicionada.')
-  } catch {
-    notify('Não foi possível salvar a atividade no banco.', 'error')
+  } catch (error) {
+    console.error('Erro ao salvar atividade:', error)
+    notify('Não foi possível salvar a atividade.', 'error')
   }
 }
 
@@ -113,7 +117,8 @@ async function removeActivity(activity) {
   try {
     await routineStore.deleteActivity(selectedRoutine.value.id, activity.id)
     notify('Atividade excluída.')
-  } catch {
+  } catch (error) {
+    console.error('Erro ao excluir atividade:', error)
     notify('Não foi possível excluir a atividade.', 'error')
   }
 }
@@ -131,8 +136,9 @@ async function saveHabit(data) {
     habitEditorOpen.value = false
     editingHabit.value = null
     notify(data.id ? 'Hábito atualizado.' : 'Hábito adicionado.')
-  } catch {
-    notify('Não foi possível salvar o hábito no banco.', 'error')
+  } catch (error) {
+    console.error('Erro ao salvar hábito:', error)
+    notify('Não foi possível salvar o hábito.', 'error')
   }
 }
 
@@ -143,7 +149,8 @@ async function removeHabit(habit) {
   try {
     await routineStore.deleteHabit(selectedRoutine.value.id, habit.id)
     notify('Hábito excluído.')
-  } catch {
+  } catch (error) {
+    console.error('Erro ao excluir hábito:', error)
     notify('Não foi possível excluir o hábito.', 'error')
   }
 }

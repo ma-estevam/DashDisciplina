@@ -239,7 +239,7 @@ async function saveRecord() {
     <div v-if="!activeRoutine" class="panel empty-state">
       <h3>Nenhuma rotina ativa</h3>
       <p>Crie uma rotina para começar seus registros.</p>
-      <RouterLink class="btn-primary empty-action" to="/rotina">Configurar rotina</RouterLink>
+      <RouterLink class="btn-primary empty-action" to="/rotina">Criar minha primeira rotina</RouterLink>
     </div>
 
     <template v-else>

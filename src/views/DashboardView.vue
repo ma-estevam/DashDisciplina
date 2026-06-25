@@ -117,6 +117,12 @@ function formatDate(date) {
       />
     </div>
 
+    <article v-if="!activeRoutine" class="panel empty-state">
+      <h3>Nenhuma rotina ativa</h3>
+      <p>Crie sua primeira rotina para montar horários, hábitos e acompanhar seu progresso diário.</p>
+      <RouterLink class="btn-primary empty-action" to="/rotina">Criar minha primeira rotina</RouterLink>
+    </article>
+
     <RouterLink v-if="todayException" to="/registro-diario" class="exception-alert panel">
       <Pin class="module-icon" aria-hidden="true" />
       <div>
@@ -177,7 +183,7 @@ function formatDate(date) {
       </RouterLink>
     </section>
 
-    <section class="content-grid">
+    <section v-if="activeRoutine" class="content-grid">
       <article class="panel">
         <div class="section-header">
           <div>

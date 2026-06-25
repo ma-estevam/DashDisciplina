@@ -76,10 +76,6 @@ async function deleteCourse(course) {
       <CourseForm :course="editingCourse" @save="saveCourse" @cancel="editorOpen = false" />
     </article>
 
-    <p v-if="coursesStore.usingLocalFallback" class="feedback-message feedback-warning">
-      Salvando temporariamente no navegador até a tabela de cursos estar disponível no Supabase.
-    </p>
-
     <div v-if="coursesStore.courses.length" class="tracker-grid">
       <CourseCard
         v-for="course in coursesStore.courses"

@@ -76,10 +76,6 @@ async function deleteBook(book) {
       <BookForm :book="editingBook" @save="saveBook" @cancel="editorOpen = false" />
     </article>
 
-    <p v-if="booksStore.usingLocalFallback" class="feedback-message feedback-warning">
-      Salvando temporariamente no navegador até a tabela de livros estar disponível no Supabase.
-    </p>
-
     <div v-if="booksStore.books.length" class="tracker-grid">
       <BookCard v-for="book in booksStore.books" :key="book.id" :book="book" @edit="openEdit" @delete="deleteBook" />
     </div>
