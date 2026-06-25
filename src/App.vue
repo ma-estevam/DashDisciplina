@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import {
   Activity,
@@ -23,10 +23,6 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const isAuthPage = computed(() => route.name === 'login')
-
-onMounted(() => {
-  authStore.initialize()
-})
 
 const navItems = [
   {

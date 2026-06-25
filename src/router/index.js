@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { supabase } from '../services/supabase'
+import { useAuthStore } from '../stores/authStore'
 
 import DashboardView from '../views/DashboardView.vue'
 import DailyRegisterView from '../views/DailyRegisterView.vue'
@@ -7,7 +7,7 @@ import ReportsView from '../views/ReportsView.vue'
 import ExceptionsView from '../views/ExceptionsView.vue'
 import EvidenceView from '../views/EvidenceView.vue'
 import LoginView from '../views/LoginView.vue'
-import RoutineView from '../views/RoutineView.vue'
+import RoutineSettingsView from '../views/RoutineSettingsView.vue'
 import BodyProgressView from '../views/BodyProgressView.vue'
 import BooksView from '../views/BooksView.vue'
 import CoursesView from '../views/CoursesView.vue'
@@ -32,7 +32,7 @@ const router = createRouter({
     {
       path: '/rotina',
       name: 'routine',
-      component: RoutineView,
+      component: RoutineSettingsView,
       meta: { requiresAuth: true },
     },
     {
@@ -93,15 +93,20 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  const { data } = await supabase.auth.getSession()
-  const isLoggedIn = Boolean(data.session)
+  const authStore = useAuthStore()
+
+  if (!authStore.initialized) {
+    await authStore.initialize()
+  }
+
+  const isLoggedIn = authStore.isAuthenticated
 
   if (to.meta.requiresAuth && !isLoggedIn) {
-    return '/login'
+    if (to.name !== 'login') return { name: 'login' }
   }
 
   if (to.name === 'login' && isLoggedIn) {
-    return '/'
+    return { name: 'dashboard' }
   }
 })
 

@@ -362,7 +362,7 @@ async function saveRecord() {
 
             <div v-if="entry.evidenceIds.length" class="evidence-thumbs">
               <div v-for="evidenceId in entry.evidenceIds" :key="evidenceId" class="evidence-thumb">
-                <img v-if="evidenceFor(evidenceId)" :src="evidenceFor(evidenceId).image" alt="Evidência anexada" />
+                <img v-if="evidenceFor(evidenceId)" :src="evidenceFor(evidenceId).image" alt="Evidência anexada" loading="lazy" />
                 <button type="button" title="Remover evidência" @click="removeEvidence(entry, evidenceId)">×</button>
               </div>
             </div>

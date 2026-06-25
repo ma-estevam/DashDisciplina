@@ -12,12 +12,14 @@ const name = ref('')
 const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
+const isSubmitting = ref(false)
 
 function resetError() {
   errorMessage.value = ''
 }
 
 function toggleMode() {
+  if (isSubmitting.value) return
   isRegisterMode.value = !isRegisterMode.value
   name.value = ''
   email.value = ''
@@ -25,7 +27,8 @@ function toggleMode() {
   errorMessage.value = ''
 }
 
-function handleSubmit() {
+async function handleSubmit() {
+  if (isSubmitting.value) return
   resetError()
 
   if (!email.value || !password.value) {
@@ -38,23 +41,27 @@ function handleSubmit() {
     return
   }
 
+  isSubmitting.value = true
+
   try {
     if (isRegisterMode.value) {
-      authStore.register({
+      await authStore.register({
         name: name.value,
         email: email.value,
         password: password.value,
       })
     } else {
-      authStore.login({
+      await authStore.login({
         email: email.value,
         password: password.value,
       })
     }
 
-    router.push('/')
+    await router.push('/')
   } catch (error) {
-    errorMessage.value = error.message
+    errorMessage.value = error.message || 'Não foi possível entrar. Tente novamente.'
+  } finally {
+    isSubmitting.value = false
   }
 }
 </script>
@@ -105,12 +112,12 @@ function handleSubmit() {
           {{ errorMessage }}
         </p>
 
-        <button class="btn-primary auth-button" type="submit">
-          {{ isRegisterMode ? 'Criar conta' : 'Entrar' }}
+        <button class="btn-primary auth-button" type="submit" :disabled="isSubmitting || authStore.loading">
+          {{ isSubmitting || authStore.loading ? (isRegisterMode ? 'Criando...' : 'Entrando...') : (isRegisterMode ? 'Criar conta' : 'Entrar') }}
         </button>
       </form>
 
-      <button class="auth-switch" type="button" @click="toggleMode">
+      <button class="auth-switch" type="button" :disabled="isSubmitting || authStore.loading" @click="toggleMode">
         {{ isRegisterMode ? 'Já tenho conta' : 'Criar uma conta' }}
       </button>
     </section>

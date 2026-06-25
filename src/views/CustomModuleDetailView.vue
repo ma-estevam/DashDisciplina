@@ -157,13 +157,14 @@ function fieldValue(field, record) {
                     v-if="field.fieldType === 'image' && record.values?.[field.fieldKey]"
                     :src="record.values[field.fieldKey]"
                     :alt="field.label"
+                    loading="lazy"
                   />
                   <span v-else>{{ fieldValue(field, record) }}</span>
                 </dd>
               </template>
             </dl>
 
-            <img v-if="record.evidenceUrl" class="custom-record-evidence" :src="record.evidenceUrl" alt="Evidência do registro" />
+            <img v-if="record.evidenceUrl" class="custom-record-evidence" :src="record.evidenceUrl" alt="Evidência do registro" loading="lazy" />
             <p v-if="record.notes">{{ record.notes }}</p>
           </article>
         </div>

@@ -196,7 +196,7 @@ function formatDate(date) {
         <h4>{{ group.name }}</h4>
         <div v-if="group.items.length" class="evidence-grid">
           <article v-for="item in group.items" :key="item.id" class="evidence-card">
-            <img :src="item.image" :alt="`Evidência de ${group.name}`" />
+            <img :src="item.image" :alt="`Evidência de ${group.name}`" loading="lazy" />
             <div class="evidence-card-content">
               <strong>{{ group.name }}</strong>
               <p v-if="item.note">{{ item.note }}</p>

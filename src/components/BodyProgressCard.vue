@@ -18,7 +18,7 @@ function formatDate(date) {
 
 <template>
   <article class="tracker-card body-progress-card">
-    <img v-if="record.photoUrl" :src="record.photoUrl" alt="Foto de evolução física" />
+    <img v-if="record.photoUrl" :src="record.photoUrl" alt="Foto de evolução física" loading="lazy" />
     <div class="tracker-card-content">
       <span class="eyebrow">{{ formatDate(record.recordDate) }}</span>
       <h3>{{ record.weight || 0 }} kg</h3>

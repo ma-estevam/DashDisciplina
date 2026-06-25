@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { supabase } from '../services/supabase'
 
+let sessionRestorePromise = null
+
 function fallbackName(user) {
   return user?.user_metadata?.name || user?.email?.split('@')[0] || 'Usuária'
 }
@@ -19,7 +21,14 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     async initialize() {
-      await this.restoreSession()
+      if (this.initialized) return this.currentUser
+      if (sessionRestorePromise) return sessionRestorePromise
+
+      sessionRestorePromise = this.restoreSession().finally(() => {
+        sessionRestorePromise = null
+      })
+
+      return sessionRestorePromise
     },
 
     async loadUserProfile(user) {
@@ -34,7 +43,8 @@ export const useAuthStore = defineStore('auth', {
 
         if (error) throw error
         return data
-      } catch {
+      } catch (error) {
+        console.error('Erro ao carregar perfil:', error)
         return null
       }
     },
@@ -43,37 +53,48 @@ export const useAuthStore = defineStore('auth', {
       if (!user?.id) return
 
       try {
-        await supabase.from('profiles').upsert({
+        const { error } = await supabase.from('profiles').upsert({
           id: user.id,
           name: name || fallbackName(user),
           email: user.email,
           updated_at: new Date().toISOString(),
         })
-      } catch {
-        // A tabela profiles pode ainda não existir. O Auth metadata continua sendo o fallback.
+
+        if (error) throw error
+      } catch (error) {
+        console.error('Erro ao salvar perfil:', error)
       }
     },
 
     async restoreSession() {
+      if (this.initialized) return this.currentUser
       this.loading = true
 
       try {
         const { data, error } = await supabase.auth.getSession()
 
-        if (error || !data.session?.user) {
+        if (error) throw error
+
+        if (!data.session?.user) {
           this.currentUser = null
-          return
+          return null
         }
 
         const user = data.session.user
         const profile = await this.loadUserProfile(user)
-        const name = profile?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Usuária'
+        const name = profile?.name || fallbackName(user)
 
         this.currentUser = {
           id: user.id,
           email: profile?.email || user.email,
           name,
         }
+
+        return this.currentUser
+      } catch (error) {
+        console.error('Erro ao restaurar sessão:', error)
+        this.currentUser = null
+        return null
       } finally {
         this.loading = false
         this.initialized = true
@@ -81,73 +102,92 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async register({ name, email, password }) {
+      if (this.loading) return this.currentUser
       this.loading = true
 
-      const cleanName = name.trim()
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim().toLowerCase(),
-        password,
-        options: {
-          data: {
-            name: cleanName,
+      try {
+        const cleanName = name.trim()
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim().toLowerCase(),
+          password,
+          options: {
+            data: {
+              name: cleanName,
+            },
+            emailRedirectTo: `${window.location.origin}/login`,
           },
-          emailRedirectTo: `${window.location.origin}/login`,
-        },
-      })
-      this.loading = false
-      this.initialized = true
+        })
 
-      if (error) {
-        throw new Error(error.message)
-      }
+        if (error) throw error
 
-      const user = data.user
+        const user = data.user
 
-      if (!user) {
-        throw new Error('Não foi possível criar o usuário.')
-      }
+        if (!user) {
+          throw new Error('Não foi possível criar o usuário.')
+        }
 
-      await this.upsertProfile(user, cleanName)
+        await this.upsertProfile(user, cleanName)
 
-      this.currentUser = {
-        id: user.id,
-        email: user.email,
-        name: cleanName || fallbackName(user),
+        this.currentUser = {
+          id: user.id,
+          email: user.email,
+          name: cleanName || fallbackName(user),
+        }
+
+        return this.currentUser
+      } catch (error) {
+        console.error('Erro ao criar conta:', error)
+        throw new Error(error.message || 'Não foi possível criar sua conta.', { cause: error })
+      } finally {
+        this.loading = false
+        this.initialized = true
       }
     },
 
     async login({ email, password }) {
+      if (this.loading) return this.currentUser
       this.loading = true
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
-        password,
-      })
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password,
+        })
 
-      if (error) {
+        if (error) {
+          throw new Error('E-mail ou senha inválidos.')
+        }
+
+        const user = data.user
+        const profile = await this.loadUserProfile(user)
+        const name = profile?.name || fallbackName(user)
+
+        this.currentUser = {
+          id: user.id,
+          email: profile?.email || user.email,
+          name,
+        }
+
+        return this.currentUser
+      } catch (error) {
+        console.error('Erro ao fazer login:', error)
+        throw error
+      } finally {
         this.loading = false
         this.initialized = true
-        throw new Error('E-mail ou senha inválidos.')
       }
-
-      const user = data.user
-      const profile = await this.loadUserProfile(user)
-      const name = profile?.name || fallbackName(user)
-
-      this.currentUser = {
-        id: user.id,
-        email: profile?.email || user.email,
-        name,
-      }
-
-      this.loading = false
-      this.initialized = true
     },
 
     async logout() {
-      await supabase.auth.signOut()
-      this.currentUser = null
-      this.initialized = true
+      this.loading = true
+
+      try {
+        await supabase.auth.signOut()
+      } finally {
+        this.currentUser = null
+        this.loading = false
+        this.initialized = true
+      }
     },
   },
 })
