@@ -25,7 +25,7 @@ watch(
   () => [props.module, props.record],
   () => {
     form.recordDate = props.record?.recordDate || new Date().toISOString().slice(0, 10)
-    form.values = { ...(props.record?.values || {}) }
+    form.values = { ...props.record?.values }
     form.evidenceUrl = props.record?.evidenceUrl || ''
     form.notes = props.record?.notes || ''
   },
@@ -112,8 +112,8 @@ function save() {
             field.fieldType === 'number' ||
             field.fieldType === 'percentage' ||
             field.fieldType === 'money' ||
-            field.fieldType === 'scale_5' ||
-            field.fieldType === 'scale_10'
+            field.fieldType === 'scale_1_5' ||
+            field.fieldType === 'scale_1_10'
               ? 'number'
               : field.fieldType === 'date'
                 ? 'date'
@@ -121,8 +121,8 @@ function save() {
                   ? 'time'
                   : 'text'
           "
-          :min="field.fieldType === 'scale_5' || field.fieldType === 'scale_10' ? 1 : undefined"
-          :max="field.fieldType === 'scale_5' ? 5 : field.fieldType === 'scale_10' ? 10 : undefined"
+          :min="field.fieldType === 'scale_1_5' || field.fieldType === 'scale_1_10' ? 1 : undefined"
+          :max="field.fieldType === 'scale_1_5' ? 5 : field.fieldType === 'scale_1_10' ? 10 : undefined"
           :step="field.fieldType === 'money' ? '0.01' : undefined"
         />
       </div>

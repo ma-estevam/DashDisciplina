@@ -2,8 +2,6 @@ import { defineStore } from 'pinia'
 import { supabase } from '../services/supabase'
 import { useAuthStore } from './authStore'
 
-const STORAGE_KEY = 'disciplina_247_courses_v1'
-
 export const COURSE_CATEGORIES = [
   'Desenvolvimento Web com IA',
   'Front-end',
@@ -53,21 +51,12 @@ function toRow(course, userId) {
   }
 }
 
-function getLocalKey(userId) {
-  return `${STORAGE_KEY}:${userId || 'guest'}`
+function loadLocal() {
+  return []
 }
 
-function loadLocal(userId) {
-  try {
-    const saved = JSON.parse(localStorage.getItem(getLocalKey(userId)) || '[]')
-    return Array.isArray(saved) ? saved : []
-  } catch {
-    return []
-  }
-}
-
-function saveLocal(userId, courses) {
-  localStorage.setItem(getLocalKey(userId), JSON.stringify(courses))
+function saveLocal() {
+  // Cursos agora são persistidos apenas no Supabase.
 }
 
 export const useCoursesStore = defineStore('courses', {

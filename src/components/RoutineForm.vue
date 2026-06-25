@@ -14,6 +14,11 @@ const form = reactive({
   name: '',
   description: '',
   type: 'custom',
+  icon: 'Target',
+  color: '#8f1828',
+  weeklyGoalPercent: 70,
+  startDate: '',
+  endDate: '',
 })
 
 watch(
@@ -22,13 +27,18 @@ watch(
     form.name = routine?.name || ''
     form.description = routine?.description || ''
     form.type = routine?.type || 'custom'
+    form.icon = routine?.icon || 'Target'
+    form.color = routine?.color || '#8f1828'
+    form.weeklyGoalPercent = routine?.weeklyGoalPercent || 70
+    form.startDate = routine?.startDate || ''
+    form.endDate = routine?.endDate || ''
   },
   { immediate: true },
 )
 
 function submit() {
   if (!form.name.trim()) return
-  emit('save', { ...form })
+  emit('save', { ...form, name: form.name.trim() })
 }
 </script>
 
@@ -48,6 +58,31 @@ function submit() {
           <option value="work">Trabalho</option>
           <option value="custom">Personalizada</option>
         </select>
+      </div>
+
+      <div class="form-group">
+        <label for="routine-icon">Ícone</label>
+        <input id="routine-icon" v-model="form.icon" maxlength="40" placeholder="Ex: Target, BookOpen" />
+      </div>
+
+      <div class="form-group">
+        <label for="routine-color">Cor</label>
+        <input id="routine-color" v-model="form.color" type="color" />
+      </div>
+
+      <div class="form-group">
+        <label for="routine-weekly-goal">Meta semanal (%)</label>
+        <input id="routine-weekly-goal" v-model.number="form.weeklyGoalPercent" min="0" max="100" type="number" />
+      </div>
+
+      <div class="form-group">
+        <label for="routine-start">Data inicial</label>
+        <input id="routine-start" v-model="form.startDate" type="date" />
+      </div>
+
+      <div class="form-group">
+        <label for="routine-end">Data final</label>
+        <input id="routine-end" v-model="form.endDate" type="date" />
       </div>
     </div>
 

@@ -2,8 +2,6 @@ import { defineStore } from 'pinia'
 import { supabase } from '../services/supabase'
 import { useAuthStore } from './authStore'
 
-const STORAGE_KEY = 'disciplina_247_books_v1'
-
 function createId() {
   return crypto.randomUUID()
 }
@@ -87,21 +85,12 @@ function defaultBooks(userId) {
   ]
 }
 
-function getLocalKey(userId) {
-  return `${STORAGE_KEY}:${userId || 'guest'}`
+function loadLocal() {
+  return []
 }
 
-function loadLocal(userId) {
-  try {
-    const saved = JSON.parse(localStorage.getItem(getLocalKey(userId)) || '[]')
-    return Array.isArray(saved) ? saved : []
-  } catch {
-    return []
-  }
-}
-
-function saveLocal(userId, books) {
-  localStorage.setItem(getLocalKey(userId), JSON.stringify(books))
+function saveLocal() {
+  // Livros agora são persistidos apenas no Supabase.
 }
 
 export const useBooksStore = defineStore('books', {

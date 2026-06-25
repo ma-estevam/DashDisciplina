@@ -9,9 +9,13 @@ export const useDailyRecordStore = defineStore('dailyRecords', {
       disciplineStore.initialize()
     },
 
-    loadDailyRecordByDate(date) {
+    loadRecordByDate(date) {
       const disciplineStore = useDisciplineStore()
-      return disciplineStore.recordByDate(date)
+      return disciplineStore.loadRecordByDate(date)
+    },
+
+    loadDailyRecordByDate(date) {
+      return this.loadRecordByDate(date)
     },
 
     checkIfExceptionDay(date) {
@@ -25,9 +29,18 @@ export const useDailyRecordStore = defineStore('dailyRecords', {
       return planned ? Math.min(100, Math.round((completed / planned) * 100)) : 0
     },
 
+    calculateProgress(payload) {
+      return this.calculateDailyProgress(payload)
+    },
+
     saveDailyRecord(payload) {
       const disciplineStore = useDisciplineStore()
       return disciplineStore.saveRecord(payload)
+    },
+
+    loadWeekRecords(dateKeys) {
+      const disciplineStore = useDisciplineStore()
+      return disciplineStore.loadWeekRecords(dateKeys)
     },
 
     updateDailyRecord(payload) {

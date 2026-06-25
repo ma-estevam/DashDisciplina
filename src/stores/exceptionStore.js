@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
 import { supabase } from '../services/supabase'
 import { useAuthStore } from './authStore'
-
-const STORAGE_KEY = 'disciplina_247_exceptions_v1'
+import { useRoutineStore } from './routineStore'
 
 const defaultExceptions = [
   {
@@ -48,11 +47,7 @@ const defaultExceptions = [
 ]
 
 function readStorage() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { version: 1, users: {} }
-  } catch {
-    return { version: 1, users: {} }
-  }
+  return { version: 1, users: {} }
 }
 
 function safeId(id) {
@@ -64,6 +59,7 @@ function safeId(id) {
 function normalizeException(row) {
   return {
     id: safeId(row.id),
+    routineId: row.routine_id || row.routineId || null,
     date: row.exception_date || row.date,
     title: row.title || 'Exceção sem título',
     description: row.description || '',
@@ -80,6 +76,7 @@ function toSupabase(exception, userId) {
   return {
     id: exception.id,
     user_id: userId,
+    routine_id: exception.routineId || null,
     exception_date: exception.date,
     title: exception.title,
     description: exception.description,
@@ -125,16 +122,11 @@ export const useExceptionStore = defineStore('exceptions', {
         this.exceptions = userData.exceptions.map(normalizeException)
       } else {
         this.exceptions = defaultExceptions.map((item) => normalizeException(item))
-        storage.users[userId] = { exceptions: this.exceptions }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(storage))
       }
     },
 
     persistLocal() {
-      if (!this.userId) return
-      const storage = readStorage()
-      storage.users[this.userId] = { exceptions: this.exceptions }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(storage))
+      // Exceções agora são persistidas apenas no Supabase.
     },
 
     async loadExceptions() {
@@ -181,9 +173,11 @@ export const useExceptionStore = defineStore('exceptions', {
     },
 
     async saveException(exceptionData) {
+      const routineStore = useRoutineStore()
       const now = new Date().toISOString()
       const exception = normalizeException({
         id: exceptionData.id || crypto.randomUUID(),
+        routineId: exceptionData.routineId || routineStore.activeRoutineId || null,
         date: exceptionData.date,
         title: exceptionData.title?.trim() || 'Exceção sem título',
         description: exceptionData.description?.trim() || '',
@@ -220,6 +214,14 @@ export const useExceptionStore = defineStore('exceptions', {
       }
 
       return exception
+    },
+
+    async createException(exceptionData) {
+      return this.saveException(exceptionData)
+    },
+
+    async updateException(exceptionId, exceptionData) {
+      return this.saveException({ ...exceptionData, id: exceptionId })
     },
 
     async deleteException(exceptionId) {

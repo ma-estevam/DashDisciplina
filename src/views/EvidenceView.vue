@@ -88,7 +88,7 @@ async function handleFiles(event) {
     for (const file of files) {
       if (!file.type.startsWith('image/')) continue
       const image = await resizeImage(file)
-      disciplineStore.addEvidence({
+      await disciplineStore.addEvidence({
         date: selectedDate.value,
         routineId: routineStore.activeRoutineId,
         habitId: selectedHabit.value.id,
@@ -108,9 +108,14 @@ async function handleFiles(event) {
   }
 }
 
-function deleteEvidence(id) {
+async function deleteEvidence(id) {
   if (!window.confirm('Excluir esta evidência?')) return
-  disciplineStore.deleteEvidence(id)
+  try {
+    await disciplineStore.deleteEvidence(id)
+    message.value = 'Evidência excluída.'
+  } catch {
+    message.value = 'Não foi possível excluir a evidência.'
+  }
 }
 
 function formatDate(date) {

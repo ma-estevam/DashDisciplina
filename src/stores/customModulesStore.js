@@ -2,8 +2,6 @@ import { defineStore } from 'pinia'
 import { supabase } from '../services/supabase'
 import { useAuthStore } from './authStore'
 
-const STORAGE_KEY = 'disciplina_247_custom_modules_v1'
-
 export const FIELD_TYPES = [
   { value: 'short_text', label: 'Texto curto' },
   { value: 'long_text', label: 'Texto longo' },
@@ -15,8 +13,8 @@ export const FIELD_TYPES = [
   { value: 'percentage', label: 'Porcentagem' },
   { value: 'money', label: 'Valor monetário' },
   { value: 'image', label: 'Imagem/evidência' },
-  { value: 'scale_5', label: 'Escala 1 a 5' },
-  { value: 'scale_10', label: 'Escala 1 a 10' },
+  { value: 'scale_1_5', label: 'Escala 1 a 5' },
+  { value: 'scale_1_10', label: 'Escala 1 a 10' },
 ]
 
 function createId() {
@@ -39,23 +37,6 @@ function slugify(value) {
   )
 }
 
-function getLocalKey(userId) {
-  return `${STORAGE_KEY}:${userId || 'guest'}`
-}
-
-function loadLocal(userId) {
-  try {
-    const saved = JSON.parse(localStorage.getItem(getLocalKey(userId)) || '[]')
-    return Array.isArray(saved) ? saved : []
-  } catch {
-    return []
-  }
-}
-
-function saveLocal(userId, modules) {
-  localStorage.setItem(getLocalKey(userId), JSON.stringify(modules))
-}
-
 function toModule(row, fields = [], records = []) {
   return {
     id: row.id,
@@ -64,7 +45,7 @@ function toModule(row, fields = [], records = []) {
     description: row.description || '',
     icon: row.icon || 'Target',
     color: row.color || '#8f1828',
-    trackingType: row.tracking_type || 'livre',
+    trackingType: row.tracking_type || 'free',
     goal: row.goal || '',
     unit: row.unit || '',
     allowEvidence: Boolean(row.allow_evidence),
@@ -106,14 +87,16 @@ function toRecord(row) {
 }
 
 function moduleRow(module, userId) {
+  const goal = Number(module.goal)
+
   return {
     user_id: userId,
     name: module.name || '',
     description: module.description || '',
     icon: module.icon || 'Target',
     color: module.color || '#8f1828',
-    tracking_type: module.trackingType || 'livre',
-    goal: module.goal || '',
+    tracking_type: module.trackingType || 'free',
+    goal: module.goal === '' || module.goal === null || module.goal === undefined || Number.isNaN(goal) ? null : goal,
     unit: module.unit || '',
     allow_evidence: Boolean(module.allowEvidence),
     show_on_dashboard: Boolean(module.showOnDashboard),
@@ -172,6 +155,7 @@ export const useCustomModulesStore = defineStore('customModules', {
     loading: false,
     usingLocalFallback: false,
     userId: null,
+    error: '',
   }),
 
   getters: {
@@ -193,9 +177,10 @@ export const useCustomModulesStore = defineStore('customModules', {
       const userId = authStore.currentUser?.id
       this.userId = userId || null
       this.loading = true
+      this.error = ''
 
       if (!userId) {
-        this.modules = loadLocal(null)
+        this.modules = []
         this.loading = false
         return
       }
@@ -228,20 +213,21 @@ export const useCustomModulesStore = defineStore('customModules', {
           toModule(module, fieldsByModule.get(module.id) || [], recordsByModule.get(module.id) || []),
         )
         this.usingLocalFallback = false
-      } catch {
-        this.usingLocalFallback = true
-        this.modules = loadLocal(userId)
+      } catch (error) {
+        this.error = error.message || 'Não foi possível carregar os módulos personalizados.'
+        this.modules = []
       } finally {
         this.loading = false
       }
     },
 
     persistLocal() {
-      saveLocal(this.userId, this.modules)
+      // Os módulos personalizados agora são salvos apenas no Supabase.
     },
 
     async createModule(moduleData) {
       const userId = useAuthStore().currentUser?.id || this.userId
+      if (!userId) throw new Error('Faça login para salvar módulos personalizados no banco.')
       const fields = normalizeFields(moduleData.fields)
       const localModule = {
         id: createId(),
@@ -252,7 +238,7 @@ export const useCustomModulesStore = defineStore('customModules', {
         description: moduleData.description || '',
         icon: moduleData.icon || 'Target',
         color: moduleData.color || '#8f1828',
-        trackingType: moduleData.trackingType || 'livre',
+        trackingType: moduleData.trackingType || 'free',
         goal: moduleData.goal || '',
         unit: moduleData.unit || '',
         allowEvidence: Boolean(moduleData.allowEvidence),
@@ -261,41 +247,37 @@ export const useCustomModulesStore = defineStore('customModules', {
         records: [],
       }
 
-      if (userId && !this.usingLocalFallback) {
-        try {
-          const { data, error } = await supabase
-            .from('custom_modules')
-            .insert(moduleRow(localModule, userId))
+      try {
+        const { data, error } = await supabase
+          .from('custom_modules')
+          .insert(moduleRow(localModule, userId))
+          .select()
+          .single()
+
+        if (error) throw error
+
+        const createdFields = []
+        if (fields.length) {
+          const { data: fieldData, error: fieldError } = await supabase
+            .from('custom_module_fields')
+            .insert(fields.map((field, index) => fieldRow(field, data.id, userId, index)))
             .select()
-            .single()
 
-          if (error) throw error
-
-          const createdFields = []
-          if (fields.length) {
-            const { data: fieldData, error: fieldError } = await supabase
-              .from('custom_module_fields')
-              .insert(fields.map((field, index) => fieldRow(field, data.id, userId, index)))
-              .select()
-
-            if (fieldError) throw fieldError
-            createdFields.push(...(fieldData || []).map(toField))
-          }
-
-          const created = toModule(data, createdFields, [])
-          this.modules.unshift(created)
-          return created
-        } catch {
-          this.usingLocalFallback = true
+          if (fieldError) throw fieldError
+          createdFields.push(...(fieldData || []).map(toField))
         }
-      }
 
-      this.modules.unshift(localModule)
-      this.persistLocal()
-      return localModule
+        const created = toModule(data, createdFields, [])
+        this.modules.unshift(created)
+        return created
+      } catch (error) {
+        this.error = error.message || 'Não foi possível criar o módulo.'
+        throw error
+      }
     },
 
     async updateModule(moduleId, moduleData) {
+      if (!this.userId) throw new Error('Faça login para editar módulos personalizados no banco.')
       const index = this.modules.findIndex((module) => module.id === moduleId)
       if (index === -1) return
 
@@ -307,48 +289,46 @@ export const useCustomModulesStore = defineStore('customModules', {
         updatedAt: new Date().toISOString(),
       }
 
-      if (this.userId && !this.usingLocalFallback) {
-        try {
-          const { error } = await supabase
-            .from('custom_modules')
-            .update(moduleRow(updated, this.userId))
-            .eq('id', moduleId)
-            .eq('user_id', this.userId)
+      try {
+        const { error } = await supabase
+          .from('custom_modules')
+          .update(moduleRow(updated, this.userId))
+          .eq('id', moduleId)
+          .eq('user_id', this.userId)
 
-          if (error) throw error
+        if (error) throw error
 
-          await supabase.from('custom_module_fields').delete().eq('module_id', moduleId).eq('user_id', this.userId)
-          if (fields.length) {
-            const { error: fieldError } = await supabase
-              .from('custom_module_fields')
-              .insert(fields.map((field, fieldIndex) => fieldRow(field, moduleId, this.userId, fieldIndex)))
+        await supabase.from('custom_module_fields').delete().eq('module_id', moduleId).eq('user_id', this.userId)
+        if (fields.length) {
+          const { error: fieldError } = await supabase
+            .from('custom_module_fields')
+            .insert(fields.map((field, fieldIndex) => fieldRow(field, moduleId, this.userId, fieldIndex)))
 
-            if (fieldError) throw fieldError
-          }
-        } catch {
-          this.usingLocalFallback = true
+          if (fieldError) throw fieldError
         }
+      } catch (error) {
+        this.error = error.message || 'Não foi possível atualizar o módulo.'
+        throw error
       }
 
       this.modules[index] = updated
-      this.persistLocal()
     },
 
     async deleteModule(moduleId) {
-      this.modules = this.modules.filter((module) => module.id !== moduleId)
+      if (!this.userId) throw new Error('Faça login para excluir módulos personalizados no banco.')
 
-      if (this.userId && !this.usingLocalFallback) {
-        try {
-          await supabase.from('custom_modules').delete().eq('id', moduleId).eq('user_id', this.userId)
-        } catch {
-          this.usingLocalFallback = true
-        }
+      try {
+        const { error } = await supabase.from('custom_modules').delete().eq('id', moduleId).eq('user_id', this.userId)
+        if (error) throw error
+        this.modules = this.modules.filter((module) => module.id !== moduleId)
+      } catch (error) {
+        this.error = error.message || 'Não foi possível excluir o módulo.'
+        throw error
       }
-
-      this.persistLocal()
     },
 
     async createRecord(moduleId, recordData) {
+      if (!this.userId) throw new Error('Faça login para salvar registros no banco.')
       const module = this.moduleById(moduleId)
       if (!module) return null
 
@@ -364,28 +344,25 @@ export const useCustomModulesStore = defineStore('customModules', {
         updatedAt: new Date().toISOString(),
       }
 
-      if (this.userId && !this.usingLocalFallback) {
-        try {
-          const { data, error } = await supabase
-            .from('custom_module_records')
-            .insert(recordRow(localRecord, moduleId, this.userId))
-            .select()
-            .single()
+      try {
+        const { data, error } = await supabase
+          .from('custom_module_records')
+          .insert(recordRow(localRecord, moduleId, this.userId))
+          .select()
+          .single()
 
-          if (error) throw error
-          module.records.unshift(toRecord(data))
-          return toRecord(data)
-        } catch {
-          this.usingLocalFallback = true
-        }
+        if (error) throw error
+        const saved = toRecord(data)
+        module.records.unshift(saved)
+        return saved
+      } catch (error) {
+        this.error = error.message || 'Não foi possível criar o registro.'
+        throw error
       }
-
-      module.records.unshift(localRecord)
-      this.persistLocal()
-      return localRecord
     },
 
     async updateRecord(moduleId, recordId, recordData) {
+      if (!this.userId) throw new Error('Faça login para editar registros no banco.')
       const module = this.moduleById(moduleId)
       if (!module) return
       const index = module.records.findIndex((record) => record.id === recordId)
@@ -397,38 +374,35 @@ export const useCustomModulesStore = defineStore('customModules', {
         updatedAt: new Date().toISOString(),
       }
 
-      if (this.userId && !this.usingLocalFallback) {
-        try {
-          const { error } = await supabase
-            .from('custom_module_records')
-            .update(recordRow(updated, moduleId, this.userId))
-            .eq('id', recordId)
-            .eq('user_id', this.userId)
+      try {
+        const { error } = await supabase
+          .from('custom_module_records')
+          .update(recordRow(updated, moduleId, this.userId))
+          .eq('id', recordId)
+          .eq('user_id', this.userId)
 
-          if (error) throw error
-        } catch {
-          this.usingLocalFallback = true
-        }
+        if (error) throw error
+      } catch (error) {
+        this.error = error.message || 'Não foi possível atualizar o registro.'
+        throw error
       }
 
       module.records[index] = updated
-      this.persistLocal()
     },
 
     async deleteRecord(moduleId, recordId) {
+      if (!this.userId) throw new Error('Faça login para excluir registros no banco.')
       const module = this.moduleById(moduleId)
       if (!module) return
-      module.records = module.records.filter((record) => record.id !== recordId)
 
-      if (this.userId && !this.usingLocalFallback) {
-        try {
-          await supabase.from('custom_module_records').delete().eq('id', recordId).eq('user_id', this.userId)
-        } catch {
-          this.usingLocalFallback = true
-        }
+      try {
+        const { error } = await supabase.from('custom_module_records').delete().eq('id', recordId).eq('user_id', this.userId)
+        if (error) throw error
+        module.records = module.records.filter((record) => record.id !== recordId)
+      } catch (error) {
+        this.error = error.message || 'Não foi possível excluir o registro.'
+        throw error
       }
-
-      this.persistLocal()
     },
   },
 })

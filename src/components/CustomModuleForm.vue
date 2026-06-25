@@ -13,14 +13,19 @@ const props = defineProps({
 const emit = defineEmits(['save', 'cancel'])
 
 const iconOptions = ['Target', 'Droplets', 'Moon', 'Heart', 'Smile', 'BookOpen', 'Wallet', 'Home', 'Sparkles']
-const trackingTypes = ['diário', 'semanal', 'mensal', 'livre']
+const trackingTypes = [
+  { value: 'daily', label: 'Diário' },
+  { value: 'weekly', label: 'Semanal' },
+  { value: 'monthly', label: 'Mensal' },
+  { value: 'free', label: 'Livre' },
+]
 
 const form = reactive({
   name: '',
   description: '',
   icon: 'Target',
   color: '#8f1828',
-  trackingType: 'livre',
+  trackingType: 'free',
   goal: '',
   unit: '',
   allowEvidence: false,
@@ -35,7 +40,7 @@ watch(
     form.description = module?.description || ''
     form.icon = module?.icon || 'Target'
     form.color = module?.color || '#8f1828'
-    form.trackingType = module?.trackingType || 'livre'
+    form.trackingType = module?.trackingType || 'free'
     form.goal = module?.goal || ''
     form.unit = module?.unit || ''
     form.allowEvidence = Boolean(module?.allowEvidence)
@@ -100,7 +105,7 @@ function submit() {
         <div class="form-group">
           <label for="custom-type">Tipo de acompanhamento</label>
           <select id="custom-type" v-model="form.trackingType">
-            <option v-for="type in trackingTypes" :key="type">{{ type }}</option>
+            <option v-for="type in trackingTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
           </select>
         </div>
       </div>
@@ -122,7 +127,7 @@ function submit() {
       <div class="form-grid">
         <div class="form-group">
           <label for="custom-goal">Meta opcional</label>
-          <input id="custom-goal" v-model="form.goal" maxlength="80" placeholder="Ex: 2 litros por dia" />
+          <input id="custom-goal" v-model="form.goal" min="0" step="0.1" type="number" placeholder="Ex: 2" />
         </div>
         <div class="form-group">
           <label for="custom-unit">Unidade</label>

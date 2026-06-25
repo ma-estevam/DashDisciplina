@@ -5,8 +5,9 @@ create table if not exists public.custom_modules (
   description text not null default '',
   icon text not null default 'Target',
   color text not null default '#8f1828',
-  tracking_type text not null default 'livre',
-  goal text not null default '',
+  tracking_type text not null default 'free'
+    check (tracking_type in ('daily', 'weekly', 'monthly', 'free')),
+  goal numeric,
   unit text not null default '',
   allow_evidence boolean not null default false,
   show_on_dashboard boolean not null default true,
@@ -20,7 +21,23 @@ create table if not exists public.custom_module_fields (
   user_id uuid not null references auth.users(id) on delete cascade,
   label text not null,
   field_key text not null,
-  field_type text not null,
+  field_type text not null
+    check (
+      field_type in (
+        'short_text',
+        'long_text',
+        'number',
+        'date',
+        'time',
+        'checkbox',
+        'select',
+        'percentage',
+        'money',
+        'image',
+        'scale_1_5',
+        'scale_1_10'
+      )
+    ),
   required boolean not null default false,
   options jsonb not null default '[]'::jsonb,
   position integer not null default 0,
@@ -34,6 +51,7 @@ create table if not exists public.custom_module_records (
   record_date date not null default current_date,
   values jsonb not null default '{}'::jsonb,
   evidence_url text,
+  evidence_path text,
   notes text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

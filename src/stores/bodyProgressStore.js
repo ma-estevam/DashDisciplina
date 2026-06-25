@@ -2,8 +2,6 @@ import { defineStore } from 'pinia'
 import { supabase } from '../services/supabase'
 import { useAuthStore } from './authStore'
 
-const STORAGE_KEY = 'disciplina_247_body_progress_v1'
-
 function createId() {
   return crypto.randomUUID()
 }
@@ -70,21 +68,12 @@ function defaultRecord(userId) {
   }
 }
 
-function getLocalKey(userId) {
-  return `${STORAGE_KEY}:${userId || 'guest'}`
+function loadLocal() {
+  return []
 }
 
-function loadLocal(userId) {
-  try {
-    const saved = JSON.parse(localStorage.getItem(getLocalKey(userId)) || '[]')
-    return Array.isArray(saved) ? saved : []
-  } catch {
-    return []
-  }
-}
-
-function saveLocal(userId, records) {
-  localStorage.setItem(getLocalKey(userId), JSON.stringify(records))
+function saveLocal() {
+  // Progresso corporal agora é persistido apenas no Supabase.
 }
 
 export const useBodyProgressStore = defineStore('bodyProgress', {

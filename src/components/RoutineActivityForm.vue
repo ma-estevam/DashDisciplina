@@ -10,11 +10,24 @@ const props = defineProps({
 
 const emit = defineEmits(['save', 'cancel'])
 
+const weekDays = [
+  { value: 'mon', label: 'Seg' },
+  { value: 'tue', label: 'Ter' },
+  { value: 'wed', label: 'Qua' },
+  { value: 'thu', label: 'Qui' },
+  { value: 'fri', label: 'Sex' },
+  { value: 'sat', label: 'Sáb' },
+  { value: 'sun', label: 'Dom' },
+]
+
 const form = reactive({
   startTime: '',
   endTime: '',
   title: '',
   description: '',
+  daysOfWeek: [],
+  category: '',
+  requiresEvidence: false,
 })
 
 watch(
@@ -24,13 +37,16 @@ watch(
     form.endTime = activity?.endTime || ''
     form.title = activity?.title || ''
     form.description = activity?.description || ''
+    form.daysOfWeek = [...(activity?.daysOfWeek || [])]
+    form.category = activity?.category || ''
+    form.requiresEvidence = Boolean(activity?.requiresEvidence)
   },
   { immediate: true },
 )
 
 function submit() {
   if (!form.startTime || !form.endTime || !form.title.trim()) return
-  emit('save', { id: props.activity?.id, ...form })
+  emit('save', { id: props.activity?.id, ...form, title: form.title.trim() })
 }
 </script>
 
@@ -49,12 +65,31 @@ function submit() {
         <label for="activity-title">Atividade</label>
         <input id="activity-title" v-model="form.title" required maxlength="70" placeholder="Ex: Estudo de Vue" />
       </div>
+      <div class="form-group">
+        <label for="activity-category">Categoria</label>
+        <input id="activity-category" v-model="form.category" maxlength="40" placeholder="Ex: Estudo" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Dias da semana</label>
+      <div class="toggle-row">
+        <label v-for="day in weekDays" :key="day.value" class="check-field">
+          <input v-model="form.daysOfWeek" type="checkbox" :value="day.value" />
+          {{ day.label }}
+        </label>
+      </div>
     </div>
 
     <div class="form-group">
       <label for="activity-description">Descrição</label>
       <textarea id="activity-description" v-model="form.description" maxlength="180" placeholder="Detalhes opcionais"></textarea>
     </div>
+
+    <label class="check-field">
+      <input v-model="form.requiresEvidence" type="checkbox" />
+      Exigir evidência nesta atividade
+    </label>
 
     <div class="form-actions">
       <button class="btn-primary" type="submit">{{ activity ? 'Atualizar' : 'Adicionar atividade' }}</button>

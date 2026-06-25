@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import HabitForm from '../components/HabitForm.vue'
 import RoutineActivityForm from '../components/RoutineActivityForm.vue'
 import RoutineForm from '../components/RoutineForm.vue'
@@ -24,6 +24,13 @@ const selectedRoutine = computed(
     routineStore.activeRoutine,
 )
 
+watch(
+  () => routineStore.activeRoutineId,
+  (routineId) => {
+    if (!selectedRoutineId.value && routineId) selectedRoutineId.value = routineId
+  },
+)
+
 function notify(text, type = 'success') {
   message.value = text
   messageType.value = type
@@ -42,34 +49,42 @@ function openRoutineEdit() {
   routineEditorOpen.value = true
 }
 
-function saveRoutine(data) {
-  if (editingRoutine.value) {
-    routineStore.updateRoutine(editingRoutine.value.id, data)
-    notify('Rotina atualizada com sucesso.')
-  } else {
-    const routine = routineStore.createRoutine(data)
-    selectedRoutineId.value = routine.id
-    notify('Nova rotina criada.')
+async function saveRoutine(data) {
+  try {
+    if (editingRoutine.value) {
+      await routineStore.updateRoutine(editingRoutine.value.id, data)
+      notify('Rotina atualizada com sucesso.')
+    } else {
+      const routine = await routineStore.createRoutine(data)
+      selectedRoutineId.value = routine.id
+      notify('Nova rotina criada.')
+    }
+    routineEditorOpen.value = false
+  } catch {
+    notify('Não foi possível salvar a rotina no banco.', 'error')
   }
-  routineEditorOpen.value = false
 }
 
-function activateRoutine(routineId) {
-  routineStore.setActiveRoutine(routineId)
-  selectedRoutineId.value = routineId
-  notify('Rotina ativa alterada.')
+async function activateRoutine(routineId) {
+  try {
+    await routineStore.setActiveRoutine(routineId)
+    selectedRoutineId.value = routineId
+    notify('Rotina ativa alterada.')
+  } catch {
+    notify('Não foi possível alterar a rotina ativa.', 'error')
+  }
 }
 
-function removeRoutine() {
+async function removeRoutine() {
   const routine = selectedRoutine.value
   if (!routine || !window.confirm(`Excluir a rotina "${routine.name}"?`)) return
 
   try {
-    routineStore.deleteRoutine(routine.id)
+    await routineStore.deleteRoutine(routine.id)
     selectedRoutineId.value = routineStore.activeRoutineId
     notify('Rotina excluída.')
   } catch (error) {
-    notify(error.message, 'error')
+    notify(error.message || 'Não foi possível excluir a rotina.', 'error')
   }
 }
 
@@ -78,19 +93,29 @@ function openActivity(activity = null) {
   activityEditorOpen.value = true
 }
 
-function saveActivity(data) {
+async function saveActivity(data) {
   if (!selectedRoutine.value) return
-  routineStore.saveActivity(selectedRoutine.value.id, data)
-  activityEditorOpen.value = false
-  editingActivity.value = null
-  notify(data.id ? 'Atividade atualizada.' : 'Atividade adicionada.')
+
+  try {
+    await routineStore.saveActivity(selectedRoutine.value.id, data)
+    activityEditorOpen.value = false
+    editingActivity.value = null
+    notify(data.id ? 'Atividade atualizada.' : 'Atividade adicionada.')
+  } catch {
+    notify('Não foi possível salvar a atividade no banco.', 'error')
+  }
 }
 
-function removeActivity(activity) {
+async function removeActivity(activity) {
   if (!selectedRoutine.value || !activity) return
   if (!window.confirm(`Excluir a atividade "${activity.title}"?`)) return
-  routineStore.deleteActivity(selectedRoutine.value.id, activity.id)
-  notify('Atividade excluída.')
+
+  try {
+    await routineStore.deleteActivity(selectedRoutine.value.id, activity.id)
+    notify('Atividade excluída.')
+  } catch {
+    notify('Não foi possível excluir a atividade.', 'error')
+  }
 }
 
 function openHabit(habit = null) {
@@ -98,19 +123,29 @@ function openHabit(habit = null) {
   habitEditorOpen.value = true
 }
 
-function saveHabit(data) {
+async function saveHabit(data) {
   if (!selectedRoutine.value) return
-  routineStore.saveHabit(selectedRoutine.value.id, data)
-  habitEditorOpen.value = false
-  editingHabit.value = null
-  notify(data.id ? 'Hábito atualizado.' : 'Hábito adicionado.')
+
+  try {
+    await routineStore.saveHabit(selectedRoutine.value.id, data)
+    habitEditorOpen.value = false
+    editingHabit.value = null
+    notify(data.id ? 'Hábito atualizado.' : 'Hábito adicionado.')
+  } catch {
+    notify('Não foi possível salvar o hábito no banco.', 'error')
+  }
 }
 
-function removeHabit(habit) {
+async function removeHabit(habit) {
   if (!selectedRoutine.value || !habit) return
   if (!window.confirm(`Excluir o hábito "${habit.name}"? Os registros anteriores serão preservados.`)) return
-  routineStore.deleteHabit(selectedRoutine.value.id, habit.id)
-  notify('Hábito excluído.')
+
+  try {
+    await routineStore.deleteHabit(selectedRoutine.value.id, habit.id)
+    notify('Hábito excluído.')
+  } catch {
+    notify('Não foi possível excluir o hábito.', 'error')
+  }
 }
 </script>
 
@@ -124,6 +159,10 @@ function removeHabit(habit) {
       </div>
       <button class="btn-primary" type="button" @click="openNewRoutine">Nova rotina</button>
     </div>
+
+    <p v-if="routineStore.error" class="feedback-message feedback-error">
+      {{ routineStore.error }}
+    </p>
 
     <p v-if="message" :class="['feedback-message', `feedback-${messageType}`]">
       {{ message }}
@@ -149,7 +188,9 @@ function removeHabit(habit) {
           <strong>{{ routine.name || 'Rotina sem nome' }}</strong>
         </div>
         <p>{{ routine.description || 'Sem descrição.' }}</p>
-        <small>{{ routine.activities.length }} atividades · {{ routine.habits.length }} hábitos</small>
+        <small>
+          {{ routine.activities.length }} atividades · {{ routine.habits.length }} hábitos · meta {{ routine.weeklyGoalPercent || 70 }}%
+        </small>
         <button
           v-if="routine.id !== routineStore.activeRoutineId"
           class="btn-compact"
@@ -161,12 +202,20 @@ function removeHabit(habit) {
       </article>
     </div>
 
+    <div v-else-if="!routineStore.loading" class="panel empty-state">
+      <h3>Nenhuma rotina encontrada</h3>
+      <p>Crie sua primeira rotina para começar a registrar seus hábitos.</p>
+    </div>
+
     <template v-if="selectedRoutine">
       <div class="routine-toolbar panel">
         <div>
           <span class="eyebrow">Editando</span>
           <h3>{{ selectedRoutine?.name || routineStore.activeRoutineName }}</h3>
-          <p>{{ selectedRoutine.description || 'Adicione uma descrição para esta rotina.' }}</p>
+          <p>
+            {{ selectedRoutine.description || 'Adicione uma descrição para esta rotina.' }}
+            Meta semanal: {{ selectedRoutine.weeklyGoalPercent || 70 }}%.
+          </p>
         </div>
         <div class="form-actions">
           <button class="btn-ghost" type="button" @click="openRoutineEdit">Editar dados</button>
@@ -199,6 +248,11 @@ function removeHabit(habit) {
             <div class="editable-item-content">
               <strong>{{ activity.title }}</strong>
               <p>{{ activity.description || 'Sem descrição.' }}</p>
+              <small>
+                {{ activity.category || 'Sem categoria' }}
+                · {{ activity.daysOfWeek?.length ? `${activity.daysOfWeek.length} dias` : 'Todos os dias' }}
+                · {{ activity.requiresEvidence ? 'Exige evidência' : 'Evidência opcional' }}
+              </small>
             </div>
             <div class="item-actions">
               <button type="button" @click="openActivity(activity)">Editar</button>
@@ -236,6 +290,8 @@ function removeHabit(habit) {
               <p>{{ habit.description || 'Sem descrição.' }}</p>
               <small>
                 {{ habit.dailyGoal ? `Meta: ${habit.dailyGoal} ${habit.unit}` : 'Sem meta numérica' }}
+                · {{ habit.frequency || 'daily' }}
+                · {{ habit.isRequired ? 'Obrigatório' : 'Opcional' }}
                 · {{ habit.requiresEvidence ? 'Exige evidência' : 'Evidência opcional' }}
               </small>
             </div>

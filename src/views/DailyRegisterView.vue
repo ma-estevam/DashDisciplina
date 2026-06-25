@@ -139,7 +139,7 @@ async function attachEvidence(event, entry) {
 
   try {
     const image = await resizeImage(file)
-    const evidence = disciplineStore.addEvidence({
+    const evidence = await disciplineStore.addEvidence({
       date: selectedDate.value,
       routineId: activeRoutine.value?.id || null,
       habitId: entry.habitId,
@@ -148,6 +148,9 @@ async function attachEvidence(event, entry) {
       image,
       fileName: file.name,
     })
+    entry.logId = evidence.id
+    entry.evidenceUrl = evidence.image || evidence.evidenceUrl || ''
+    entry.evidencePath = evidence.evidencePath || ''
     entry.evidenceIds.push(evidence.id)
     notify(`Evidência adicionada ao hábito ${entry.habitName}.`)
   } catch {
@@ -158,16 +161,20 @@ async function attachEvidence(event, entry) {
   }
 }
 
-function removeEvidence(entry, evidenceId) {
-  disciplineStore.deleteEvidence(evidenceId)
-  entry.evidenceIds = entry.evidenceIds.filter((id) => id !== evidenceId)
+async function removeEvidence(entry, evidenceId) {
+  try {
+    await disciplineStore.deleteEvidence(evidenceId)
+    entry.evidenceIds = entry.evidenceIds.filter((id) => id !== evidenceId)
+  } catch {
+    notify('Não foi possível remover a evidência.', 'error')
+  }
 }
 
 function evidenceFor(id) {
   return disciplineStore.evidences.find((item) => item.id === id)
 }
 
-function saveRecord() {
+async function saveRecord() {
   message.value = ''
 
   if (!activeRoutine.value) {
@@ -187,7 +194,7 @@ function saveRecord() {
   try {
     const exception = selectedException.value || dateException.value
 
-    disciplineStore.saveRecord({
+    await disciplineStore.saveRecord({
       date: selectedDate.value,
       routine: activeRoutine.value,
       entries: entries.value,
@@ -206,7 +213,7 @@ function saveRecord() {
     })
     notify('Registro diário salvo com sucesso.')
   } catch {
-    notify('Não foi possível salvar. O armazenamento do navegador pode estar cheio.', 'error')
+    notify('Não foi possível salvar o registro no banco.', 'error')
   }
 }
 </script>
